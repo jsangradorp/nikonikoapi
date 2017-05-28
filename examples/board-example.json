@@ -1,0 +1,42 @@
+{
+  "boardId": 1,
+  "label": "Los Marianos",
+  "people": [
+    {
+      "personId": 1,
+      "label": "Mariano"
+    },
+    {
+      "personId": 2,
+      "label": "Herminia"
+    }
+  ],
+  "reportedFeelings": [
+    {
+      "date": "2017-05-27",
+      "reportedFeelings": [
+        {
+          "personId": 1,
+          "feeling": "bad"
+        },
+        {
+          "personId": 2,
+          "feeling": "neutral"
+        }
+      ]
+    },
+    {
+      "date": "2017-05-26",
+      "reportedFeelings": [
+        {
+          "personId": 1,
+          "feeling": "neutral"
+        },
+        {
+          "personId": 2,
+          "feeling": "good"
+        }
+      ]
+    }
+  ]
+}

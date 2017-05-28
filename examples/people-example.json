@@ -1,0 +1,18 @@
+[
+  {
+    "personId": 1,
+    "label": "Mariano",
+    "boards": [
+      1,
+      2
+    ]
+  },
+  {
+    "personId": 2,
+    "label": "Herminia",
+    "boards": [
+      1,
+      2
+    ]
+  }
+]

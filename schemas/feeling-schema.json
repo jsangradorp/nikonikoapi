@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-03/schema",
+  "$id": "schemas/feeling-schema.json",
+  "required": true,
+  "properties": {
+    "personId": {
+      "type": "integer",
+      "required": true
+    },
+    "boardId": {
+      "type": "integer",
+      "required": true
+    },
+    "date": {
+      "type": "string",
+      "required": true
+    },
+    "feeling": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

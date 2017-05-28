@@ -1,0 +1,76 @@
+#%RAML 1.0
+
+title: Nikoniko API
+baseUri: http://nikoniko.yokiyoki.com/api/{version}
+version: v1
+
+schemas:
+  feeling: !include schemas/feeling-schema.json
+  person: !include schemas/person-schema.json
+  board: !include schemas/board-schema.json
+
+resourceTypes:
+  collection:
+      description: Collection of all the <<resourcePathName>> in Nikoniko.
+      get:
+        description: Retrieve all or some <<resourcePathName>> data.
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  <<exampleCollection>>
+  collection-item:
+      description: Entity representing a <<resourcePathName|!singularize>>
+      get:
+        description: |
+          Get the <<resourcePathName|!singularize>>
+          With <<resourcePathName|!singularize>>Id =
+          {<<resourcePathName|!singularize>>Id}
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  <<exampleItem>>
+          404:
+            body:
+              application/json:
+                example: |
+                  { "message": "<<resourcePathName|!singularize>> not found" }
+
+/people:
+  type:
+    collection:
+      exampleCollection: !include examples/people-example.json
+  /{personId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/person-example.json
+
+/boards:
+  type:
+    collection:
+      exampleCollection: !include examples/boards-example.json
+  /{boardId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/board-example.json
+    get:
+      queryParameters:
+        fromDate:
+          type: string
+        toDate:
+          type: string
+    /people:
+      type:
+        collection:
+          exampleCollection: !include examples/people-example.json
+
+/reportedFeelings:
+  put:
+    description: Insert or update a reportedFeeling
+    body:
+      application/json:
+        schema: feeling
+        example: !include examples/reportedfeeling-example.json

@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-03/schema",
+  "$id": "schemas/person-schema.json",
+  "required": true,
+  "properties": {
+    "personId": {
+      "type": "integer",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "boards": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "required": false
+    }
+  }
+}
