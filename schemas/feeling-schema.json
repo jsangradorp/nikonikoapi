@@ -18,6 +18,7 @@
     },
     "feeling": {
       "type": "string",
+      "enum": ["bad", "neutral", "good"],
       "required": true
     }
   }
