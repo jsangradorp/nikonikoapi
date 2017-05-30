@@ -43,6 +43,11 @@ resourceTypes:
   type:
     collection:
       exampleCollection: !include examples/people-example.json
+  get:
+    queryParameters:
+      inBoard:
+        type: integer
+        required: false
   /{personId}:
     type:
       collection-item:
@@ -64,10 +69,6 @@ resourceTypes:
         toDate:
           type: string
           required: true
-    /people:
-      type:
-        collection:
-          exampleCollection: !include examples/people-example.json
 
 /reportedFeelings:
   put:
