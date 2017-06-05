@@ -1,0 +1,35 @@
+MVP nikoniko
+
+GForms? + daily invitation?
+
+
+webapp que funcione en el movil.
+Identificados por un código en la query string
+S'olo aparecen las tres caritas ("botones") y los 'ultimos d'ias *de todo el equipo*, y solo se puede modificar la carita de "hoy".
+
+Objects:
+
+ReportedFeeling:
+* PersonID
+* Timestamp
+* CommunityID
+- Feeling (Unspecified, Angry, Neutral, Happy)
+
+Person:
+* ID
+- gravatar email
+- Label
+
+Community:
+* ID
+- Label
+
+ParticipationOfPersonInCommunity:
+* PersonID
+* CommunityID
+
+Endpoints:
+
+/ -> shows current state of the board
+/flipface(person,community[,date?]) -> AJAX which "advances" the value and returns the new one
+
