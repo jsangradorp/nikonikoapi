@@ -1,1 +1,2 @@
 hug==2.3.0
+SQLAlchemy==1.1.10
