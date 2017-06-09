@@ -24,7 +24,7 @@ Community:
 * ID
 - Label
 
-ParticipationOfPersonInCommunity:
+Membership:
 * PersonID
 * CommunityID
 
