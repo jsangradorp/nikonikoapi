@@ -3,8 +3,8 @@ import logging
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from .User import User
-from .Base import Base
+from Person import Person
+from Base import Base
 
 
 logger = logging.getLogger(__name__)
@@ -18,49 +18,49 @@ if __name__ == '__main__':
     Session = sessionmaker(bind=engine)
     Base.metadata.create_all(engine)
     print("Hello")
-    print(User.__table__.__dict__)
-    ed_user = User(name='ed', fullname='Ed Jones', password='edspassword')
-    print(ed_user)
+    print(Person.__table__.__dict__)
+    ed_person = Person(name='ed', fullname='Ed Jones', password='edspassword')
+    print(ed_person)
     session = Session()
-    session.add(ed_user)
+    session.add(ed_person)
     print("Eo")
-    our_user = session.query(User).filter_by(name='ed').first()
-    print(our_user)
-    print(ed_user is our_user)
+    our_person = session.query(Person).filter_by(name='ed').first()
+    print(our_person)
+    print(ed_person is our_person)
     session.add_all([
-        User(name='wendy', fullname='Wendy Williams', password='foobar'),
-        User(name='mary', fullname='Mary Contrary', password='xxg527'),
-        User(name='fred', fullname='Fred Flinstone', password='blah')])
-    ed_user.password = 'f8s7ccs'
+        Person(name='wendy', fullname='Wendy Williams', password='foobar'),
+        Person(name='mary', fullname='Mary Contrary', password='xxg527'),
+        Person(name='fred', fullname='Fred Flinstone', password='blah')])
+    ed_person.password = 'f8s7ccs'
     print(session.dirty)
     session.commit()
-    print(ed_user.id)
+    print(ed_person.id)
     # rolling back
-    ed_user.name = 'Edwardo'
-    fake_user = User(name='fakeuser', fullname='Invalid', password='12345')
-    session.add(fake_user)
-    print(session.query(User).filter(User.name.in_(['Edwardo', 'fakeuser'])).all())
+    ed_person.name = 'Edwardo'
+    fake_person = Person(name='fakeperson', fullname='Invalid', password='12345')
+    session.add(fake_person)
+    print(session.query(Person).filter(Person.name.in_(['Edwardo', 'fakeperson'])).all())
     session.rollback()
-    print(ed_user.name)
-    print(fake_user in session)
-    print(session.query(User).filter(User.name.in_(['ed', 'fakeuser'])).all())
+    print(ed_person.name)
+    print(fake_person in session)
+    print(session.query(Person).filter(Person.name.in_(['ed', 'fakeperson'])).all())
     # Queries
-    for instance in session.query(User).order_by(User.id):
+    for instance in session.query(Person).order_by(Person.id):
         print(instance.name, instance.fullname)
-    for name, fullname in session.query(User.name, User.fullname):
+    for name, fullname in session.query(Person.name, Person.fullname):
         print(name, fullname)
-    for row in session.query(User, User.name).all():
-        print(row.User, row.name)
-    for row in session.query(User.name.label('name_label')).all():
+    for row in session.query(Person, Person.name).all():
+        print(row.Person, row.name)
+    for row in session.query(Person.name.label('name_label')).all():
         print(row.name_label)
-    user_alias = aliased(User, name='user_alias')
-    for row in session.query(user_alias, user_alias.name).all():
-        print(row.user_alias)
-    for u in session.query(User).order_by(User.id)[1:3]:
+    person_alias = aliased(Person, name='person_alias')
+    for row in session.query(person_alias, person_alias.name).all():
+        print(row.person_alias)
+    for u in session.query(Person).order_by(Person.id)[1:3]:
         print(u)
-    for name, in session.query(User.name).filter_by(fullname='Ed Jones'):
+    for name, in session.query(Person.name).filter_by(fullname='Ed Jones'):
         print(name)
-    for name, in session.query(User.name).filter(User.fullname == 'Ed Jones'):
+    for name, in session.query(Person.name).filter(Person.fullname == 'Ed Jones'):
         print(name)
-    for user in session.query(User).filter(User.name == 'ed').filter(User.fullname == 'Ed Jones'):
-        print(user)
+    for person in session.query(Person).filter(Person.name == 'ed').filter(Person.fullname == 'Ed Jones'):
+        print(person)
