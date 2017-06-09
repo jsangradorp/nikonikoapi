@@ -1,4 +1,4 @@
-from Base import Base
+from .Base import Base
 from sqlalchemy import Column, Integer, String, Sequence
 
 
@@ -11,4 +11,4 @@ class User(Base):
 
     def __repr__(self):
         return "<User(name='%s', fullname='%s', password='%s')>" % (
-                                self.name, self.fullname, self.password)
+            self.name, self.fullname, self.password)

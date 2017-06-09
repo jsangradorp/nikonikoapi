@@ -3,8 +3,8 @@ import logging
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from User import User
-from Base import Base
+from .User import User
+from .Base import Base
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ def person(id):
     return {"id": id}
 
 if __name__ == '__main__':
-    engine = create_engine('sqlite:///:memory:', echo=True);
+    engine = create_engine('sqlite:///:memory:', echo=True)
     Session = sessionmaker(bind=engine)
     Base.metadata.create_all(engine)
     print("Hello")
@@ -28,9 +28,9 @@ if __name__ == '__main__':
     print(our_user)
     print(ed_user is our_user)
     session.add_all([
-	User(name='wendy', fullname='Wendy Williams', password='foobar'),
-	User(name='mary', fullname='Mary Contrary', password='xxg527'),
-	User(name='fred', fullname='Fred Flinstone', password='blah')])
+        User(name='wendy', fullname='Wendy Williams', password='foobar'),
+        User(name='mary', fullname='Mary Contrary', password='xxg527'),
+        User(name='fred', fullname='Fred Flinstone', password='blah')])
     ed_user.password = 'f8s7ccs'
     print(session.dirty)
     session.commit()
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         print(u)
     for name, in session.query(User.name).filter_by(fullname='Ed Jones'):
         print(name)
-    for name, in session.query(User.name).filter(User.fullname=='Ed Jones'):
+    for name, in session.query(User.name).filter(User.fullname == 'Ed Jones'):
         print(name)
-    for user in session.query(User).filter(User.name=='ed').filter(User.fullname=='Ed Jones'):
+    for user in session.query(User).filter(User.name == 'ed').filter(User.fullname == 'Ed Jones'):
         print(user)
