@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Sequence
+from sqlalchemy import Column, Integer, String, Date, Sequence
 from sqlalchemy import Table, Text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
@@ -28,6 +28,7 @@ class Person(Base):
     label = Column(String(50))
 
     communities = relationship('Community', secondary=membership, back_populates='people')
+    reported_feelings = relationship('ReportedFeeling')
 
     def __repr__(self):
         return "<Person(label='%s')>" % (self.label)
@@ -39,8 +40,28 @@ class Community(Base):
     label = Column(String(50))
 
     people = relationship('Person', secondary=membership, back_populates='communities')
+    reported_feelings = relationship('ReportedFeeling')
 
     def __repr__(self):
         return "<Community(label='%s')>" % (self.label)
+
+
+class ReportedFeeling(Base):
+    __tablename__ = 'reportedfeelings'
+    person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
+    community_id = Column(Integer, ForeignKey('communities.id'), primary_key=True)
+    date = Column(Date, primary_key=True)
+    feeling = Column(String(10))
+
+    people = relationship('Person', secondary=membership, back_populates='communities')
+    # http://docs.sqlalchemy.org/en/rel_1_1/orm/basic_relationships.html#association-object
+    # http://docs.sqlalchemy.org/en/rel_1_1/orm/tutorial.html
+
+    def __repr__(self):
+        return "<ReportedFeeling(person_id='%s', community_id='%s', date='%s', feeling='%s')>" % (
+            self.label,
+            self.community_id,
+            self.date,
+            self.feeling)
 
 Base.metadata.create_all(engine)
