@@ -29,9 +29,8 @@ check-coding-style: bootstrap
 	$(PYLINT) -E $(PYTHON_MODULES)
 pylint-full: check-coding-style
 	$(PYLINT) $(PYTHON_MODULES)
-test: check-coding-style
-	$(PYTEST) $(PYTHON_MODULES)
 check:
-	$(PYTEST) $(PYTHON_MODULES)
+	$(PYTEST) test
+test: check-coding-style check
 
 .PHONY: default venv requirements bootstrap check-coding-style pylint-full test check
