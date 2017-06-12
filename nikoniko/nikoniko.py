@@ -7,8 +7,10 @@ from sqlalchemy.orm import aliased
 logger = logging.getLogger(__name__)
 
 
-def person(id):
-    return {"id": id}
+@hug.get('/person')
+def person(id: hug.types.number):
+    session = Session()
+    return session.query(Person).filter(id=id).one()
 
 if __name__ == '__main__':
     print("Hello")
