@@ -1,5 +1,6 @@
 PYTHON_MODULES := nikoniko
 PYTHONPATH := .:./nikoniko
+TESTSPATH := ./test
 VENV := .venv
 PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test
 PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --disable=I0011 --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
@@ -25,12 +26,12 @@ requirements:
 bootstrap: venv requirements
 
 check-coding-style: bootstrap
-	$(PEP8) $(PYTHON_MODULES)
+	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH)
 	$(PYLINT) -E $(PYTHON_MODULES)
 pylint-full: check-coding-style
-	$(PYLINT) $(PYTHON_MODULES)
+	$(PYLINT) $(PYTHON_MODULES) $(TESTSPATH)
 check:
-	$(PYTEST) test
+	$(PYTEST) $(TESTSPATH)
 test: check-coding-style check
 
 .PHONY: default venv requirements bootstrap check-coding-style pylint-full test check
