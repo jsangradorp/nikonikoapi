@@ -53,10 +53,8 @@ class ReportedFeeling(Base):
     date = Column(Date, primary_key=True)
     feeling = Column(String(10))
 
-    person = relationship('Person', back_populates='communities')
-    community = relationship('Community', back_populates='people')
-    # http://docs.sqlalchemy.org/en/rel_1_1/orm/basic_relationships.html#association-object
-    # http://docs.sqlalchemy.org/en/rel_1_1/orm/tutorial.html
+    person = relationship('Person', back_populates='reported_feelings')
+    community = relationship('Community', back_populates='reported_feelings')
 
     def __repr__(self):
         return "<ReportedFeeling(person_id='%s', community_id='%s', date='%s', feeling='%s')>" % (
