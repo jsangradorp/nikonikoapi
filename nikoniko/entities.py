@@ -30,6 +30,9 @@ class Person(Base):
     communities = relationship('Community', secondary=membership, back_populates='people')
     reported_feelings = relationship('ReportedFeeling')
 
+    def __init__(self, label):
+        self.label = label
+
     def __repr__(self):
         return "<Person(label='%s')>" % (self.label)
 
