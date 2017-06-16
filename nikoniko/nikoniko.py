@@ -5,12 +5,12 @@ from sqlalchemy.orm import aliased
 
 
 logger = logging.getLogger(__name__)
+session = Session()
 
 
 @hug.get('/person')
 def person(id: hug.types.number):
     '''Returns a person'''
-    session = Session()
     return session.query(Person).filter(id == id).one().label
 
 if __name__ == '__main__':
@@ -18,7 +18,6 @@ if __name__ == '__main__':
     print(Person.__table__.__dict__)
     ed_person = Person(label='ed')
     print(ed_person)
-    session = Session()
     session.add(ed_person)
     print("Eo")
     our_person = session.query(Person).filter_by(label='ed').first()

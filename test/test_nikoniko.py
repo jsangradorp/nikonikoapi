@@ -6,6 +6,7 @@ import hug
 
 
 logger = logging.getLogger(__name__)
+session = Session()
 
 
 class TestAPI(object):
@@ -23,7 +24,6 @@ class TestAPI(object):
         person.id = 25
         session = Session()
         session.add(person)
-        session.flush()
         session.commit()
         # import pdb; pdb.set_trace()
         response = hug.test.get(nikoniko, '/person', {'id': 25})  # Returns a Response object
