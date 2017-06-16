@@ -4,7 +4,8 @@ from nikoniko.entities import Session, Person
 from nikoniko.api import person
 import nikoniko.api
 import hug
-
+import pytest
+import sqlalchemy
 
 logger = logging.getLogger(__name__)
 session = Session()
@@ -30,6 +31,8 @@ class TestAPI(object):
         session.commit()
         id = person.id
         # When
-        response = hug.test.get(nikoniko.api, '/person', {'id': id})  # Returns a Response object
+        response = hug.test.get(nikoniko.api, '/person/{}'.format(id))  # Returns a Response object
         # Then
         assert(response.data == {'label': self.personLabel1})
+        with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
+            response = hug.test.get(nikoniko.api, '/person/-1')  # Returns a Response object

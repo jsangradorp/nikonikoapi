@@ -8,10 +8,10 @@ logger = logging.getLogger(__name__)
 session = Session()
 
 
-@hug.get('/person')
+@hug.get('/person/{id}')
 def person(id: hug.types.number):
     '''Returns a person'''
-    return {'label': session.query(Person).filter(id == id).one().label}
+    return {'label': session.query(Person).filter_by(id=id).one().label}
 
 if __name__ == '__main__':
     print("Hello")
