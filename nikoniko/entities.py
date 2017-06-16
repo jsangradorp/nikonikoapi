@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, Date, Sequence
-from sqlalchemy import Table, Text
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Table
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine('sqlite:///:memory:', echo=True)
 Base = declarative_base()

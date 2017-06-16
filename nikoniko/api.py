@@ -1,8 +1,9 @@
-import hug
 import logging
-from nikoniko.entities import Session, Person
+
+import hug
 from sqlalchemy.orm import aliased
 
+from nikoniko.entities import Session, Person
 
 logger = logging.getLogger(__name__)
 session = Session()
