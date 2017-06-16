@@ -10,22 +10,25 @@ session = Session()
 
 
 class TestAPI(object):
+
+    personLabel1 = "Julio"
+    personLabel2 = "Andres"
+
     def test_person_returns_a_person(self):
         # Given
         # When
-        person1 = Person("Julio")
-        person2 = Person("Julio")
+        person1 = Person(self.personLabel1)
+        person2 = Person(self.personLabel1)
         # Then
         assert person1.label == person2.label
 
-    def test_hug_tests(self):
+    def test_hug_tests_are_working(self):
         # Given
-        person = Person("Andres")
-        person.id = 25
-        session = Session()
+        person = Person(self.personLabel1)
         session.add(person)
         session.commit()
-        # import pdb; pdb.set_trace()
-        response = hug.test.get(nikoniko, '/person', {'id': 25})  # Returns a Response object
-        logger.info(response)
-        assert(response.data == "Julio")
+        id = person.id
+        # When
+        response = hug.test.get(nikoniko, '/person', {'id': id})  # Returns a Response object
+        # Then
+        assert(response.data == self.personLabel1)
