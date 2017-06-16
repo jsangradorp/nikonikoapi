@@ -11,7 +11,7 @@ session = Session()
 @hug.get('/person')
 def person(id: hug.types.number):
     '''Returns a person'''
-    return session.query(Person).filter(id == id).one().label
+    return {'label': session.query(Person).filter(id == id).one().label}
 
 if __name__ == '__main__':
     print("Hello")

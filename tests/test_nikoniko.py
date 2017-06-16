@@ -32,4 +32,4 @@ class TestAPI(object):
         # When
         response = hug.test.get(nikoniko.api, '/person', {'id': id})  # Returns a Response object
         # Then
-        assert(response.data == self.personLabel1)
+        assert(response.data == {'label': self.personLabel1})
