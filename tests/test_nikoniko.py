@@ -1,3 +1,4 @@
+from .context import nikoniko
 import logging
 from nikoniko.entities import Session, Person
 from nikoniko.api import person

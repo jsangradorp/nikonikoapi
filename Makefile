@@ -1,6 +1,6 @@
 PYTHON_MODULES := nikoniko
 PYTHONPATH := .:./nikoniko
-TESTSPATH := ./test
+TESTSPATH := ./tests
 VENV := .venv
 PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test
 PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --disable=I0011 --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
