@@ -1,7 +1,7 @@
 import logging
-from entities import Session, Person
-from nikoniko import person
-import nikoniko
+from nikoniko.entities import Session, Person
+from nikoniko.api import person
+import nikoniko.api
 import hug
 
 
@@ -29,6 +29,6 @@ class TestAPI(object):
         session.commit()
         id = person.id
         # When
-        response = hug.test.get(nikoniko, '/person', {'id': id})  # Returns a Response object
+        response = hug.test.get(nikoniko.api, '/person', {'id': id})  # Returns a Response object
         # Then
         assert(response.data == self.personLabel1)

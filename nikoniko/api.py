@@ -1,6 +1,6 @@
 import hug
 import logging
-from entities import Session, Person
+from nikoniko.entities import Session, Person
 from sqlalchemy.orm import aliased
 
 
