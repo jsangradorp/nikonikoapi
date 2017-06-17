@@ -56,7 +56,16 @@ class Board(Base):
     reported_feelings = relationship('ReportedFeeling')
 
     def __repr__(self):
-        return "<Community(label='%s')>" % (self.label)
+        return "<Board(label='%s')>" % (self.label)
+
+
+class BoardSchema(Schema):
+    id = fields.Int(dump_only=True)
+    label = fields.Str()
+    people = fields.Nested(PersonSchema, many=True)
+
+board_schema = BoardSchema()
+boards_schema = BoardSchema(many=True)
 
 
 class ReportedFeeling(Base):
