@@ -5,7 +5,6 @@ from nikoniko.entities import Session, Person, Board
 from nikoniko.api import person, people
 import nikoniko.api
 import hug
-import json
 import pytest
 import sqlalchemy
 
