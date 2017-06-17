@@ -19,8 +19,8 @@ membership = \
         Column('person_id',
                ForeignKey('people.id'),
                primary_key=True),
-        Column('community_id',
-               ForeignKey('communities.id'),
+        Column('board_id',
+               ForeignKey('boards.id'),
                primary_key=True))
 
 
@@ -29,7 +29,7 @@ class Person(Base):
     id = Column(Integer, Sequence('person_id_seq'), primary_key=True)
     label = Column(String(50))
 
-    communities = relationship('Community', secondary=membership, back_populates='people')
+    boards = relationship('Board', secondary=membership, back_populates='people')
     reported_feelings = relationship('ReportedFeeling')
 
     def __init__(self, label):
@@ -47,12 +47,12 @@ person_schema = PersonSchema()
 people_schema = PersonSchema(many=True)
 
 
-class Community(Base):
-    __tablename__ = 'communities'
-    id = Column(Integer, Sequence('community_id_seq'), primary_key=True)
+class Board(Base):
+    __tablename__ = 'boards'
+    id = Column(Integer, Sequence('board_id_seq'), primary_key=True)
     label = Column(String(50))
 
-    people = relationship('Person', secondary=membership, back_populates='communities')
+    people = relationship('Person', secondary=membership, back_populates='boards')
     reported_feelings = relationship('ReportedFeeling')
 
     def __repr__(self):
@@ -62,17 +62,17 @@ class Community(Base):
 class ReportedFeeling(Base):
     __tablename__ = 'reportedfeelings'
     person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
-    community_id = Column(Integer, ForeignKey('communities.id'), primary_key=True)
+    board_id = Column(Integer, ForeignKey('boards.id'), primary_key=True)
     date = Column(Date, primary_key=True)
     feeling = Column(String(10))
 
     person = relationship('Person', back_populates='reported_feelings')
-    community = relationship('Community', back_populates='reported_feelings')
+    board = relationship('Board', back_populates='reported_feelings')
 
     def __repr__(self):
-        return "<ReportedFeeling(person_id='%s', community_id='%s', date='%s', feeling='%s')>" % (
+        return "<ReportedFeeling(person_id='%s', board_id='%s', date='%s', feeling='%s')>" % (
             self.label,
-            self.community_id,
+            self.board_id,
             self.date,
             self.feeling)
 
