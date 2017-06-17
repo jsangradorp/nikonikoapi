@@ -2,7 +2,7 @@ PYTHON_MODULES := nikoniko
 PYTHONPATH := .:./nikoniko
 TESTSPATH := ./tests
 VENV := .venv
-PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test
+PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test -v
 PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --disable=I0011 --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
 PEP8 := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pep8 --repeat --ignore=E202,E501,E402
 PYTHON := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/python
