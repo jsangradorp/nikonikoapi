@@ -44,6 +44,7 @@ class PersonSchema(Schema):
     label = fields.Str()
 
 person_schema = PersonSchema()
+people_schema = PersonSchema(many=True)
 
 
 class Community(Base):
