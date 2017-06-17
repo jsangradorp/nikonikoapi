@@ -31,7 +31,10 @@ class TestAPI(object):
         # When
         response = hug.test.get(nikoniko.api, '/people/{}'.format(id))
         # Then
-        assert(json.loads(response.data) == {"id": id, "label": self.personLabel1})
+        assert(response.data == {
+            "id": id,
+            "label": self.personLabel1
+        })
         # Then
         with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
             response = hug.test.get(nikoniko.api, '/people/-1')
@@ -50,7 +53,16 @@ class TestAPI(object):
         # When
         response = hug.test.get(nikoniko.api, '/people')
         # Then
-        assert(json.loads(response.data) == [{"id": id1, "label": self.personLabel1}, {"id": id2, "label": self.personLabel2}])
+        assert(response.data == [
+            {
+                "id": id1,
+                "label": self.personLabel1
+            },
+            {
+                "id": id2,
+                "label": self.personLabel2
+            }
+        ])
 
     def test_get_board(self):
         # Given
