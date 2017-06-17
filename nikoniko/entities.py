@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
+from marshmallow import Schema, fields
+
 engine = create_engine('sqlite:///:memory:', echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
@@ -35,6 +37,13 @@ class Person(Base):
 
     def __repr__(self):
         return "<Person(label='%s')>" % (self.label)
+
+
+class PersonSchema(Schema):
+    id = fields.Int(dump_only=True)
+    label = fields.Str()
+
+person_schema = PersonSchema()
 
 
 class Community(Base):
