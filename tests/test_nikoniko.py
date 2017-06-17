@@ -23,7 +23,7 @@ class TestAPI(object):
         # Given
         engine.execute(Board.__table__.delete())
         engine.execute(Person.__table__.delete())
-        person = Person(self.personLabel1)
+        person = Person(label=self.personLabel1)
         session.add(person)
         session.commit()
         id = person.id
@@ -42,8 +42,8 @@ class TestAPI(object):
         # Given
         engine.execute(Board.__table__.delete())
         engine.execute(Person.__table__.delete())
-        person1 = Person(self.personLabel1)
-        person2 = Person(self.personLabel2)
+        person1 = Person(label=self.personLabel1)
+        person2 = Person(label=self.personLabel2)
         session.add(person1)
         session.add(person2)
         session.commit()
@@ -67,7 +67,7 @@ class TestAPI(object):
         # Given
         engine.execute(Board.__table__.delete())
         engine.execute(Person.__table__.delete())
-        person1 = Person(self.personLabel1)
+        person1 = Person(label=self.personLabel1)
         board1 = Board(label=self.boardLabel1)
         board1.people.append(person1)
         session.add(board1)
