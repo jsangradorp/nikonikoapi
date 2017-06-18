@@ -1,7 +1,7 @@
 from .context import nikoniko
 import logging
 from nikoniko.entities import engine
-from nikoniko.entities import Session, Person, Board
+from nikoniko.entities import Session, Person, Board, membership
 from nikoniko.api import person, people
 import nikoniko.api
 import hug
@@ -19,10 +19,14 @@ class TestAPI(object):
     boardLabel1 = "Daganzo"
     boardLabel2 = "Sabadell"
 
-    def test_get_specific_person(self):
-        # Given
+    def _clean_database(self):
+        engine.execute(membership.delete())
         engine.execute(Board.__table__.delete())
         engine.execute(Person.__table__.delete())
+
+    def test_get_specific_person(self):
+        # Given
+        self._clean_database()
         person = Person(label=self.personLabel1)
         session.add(person)
         session.commit()
@@ -38,10 +42,9 @@ class TestAPI(object):
         with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
             response = hug.test.get(nikoniko.api, '/people/-1')
 
-    def test_get_people(self):
+    def test_get_all_people(self):
         # Given
-        engine.execute(Board.__table__.delete())
-        engine.execute(Person.__table__.delete())
+        self._clean_database()
         person1 = Person(label=self.personLabel1)
         person2 = Person(label=self.personLabel2)
         session.add(person1)
@@ -65,8 +68,7 @@ class TestAPI(object):
 
     def test_get_board(self):
         # Given
-        engine.execute(Board.__table__.delete())
-        engine.execute(Person.__table__.delete())
+        self._clean_database()
         person1 = Person(label=self.personLabel1)
         board1 = Board(label=self.boardLabel1)
         board1.people.append(person1)
@@ -87,3 +89,45 @@ class TestAPI(object):
                 }
             ]
         })
+
+    def test_get_all_boards(self):
+        # Given
+        self._clean_database()
+        person1 = Person(label=self.personLabel1)
+        person2 = Person(label=self.personLabel2)
+        board1 = Board(label=self.boardLabel1)
+        board1.people.append(person1)
+        board1.people.append(person2)
+        session.add(board1)
+        board2 = Board(label=self.boardLabel2)
+        session.add(board2)
+        session.commit()
+        id1 = board1.id
+        pid1 = person1.id
+        pid2 = person2.id
+        id2 = board2.id
+        # When
+        response = hug.test.get(nikoniko.api, '/boards')
+        # Then
+        assert(response.data == [
+            {
+                "id": id1,
+                "label": self.boardLabel1,
+                "people": [
+                    {
+                        "id": pid1,
+                        "label": self.personLabel1
+                    },
+                    {
+                        "id": pid2,
+                        "label": self.personLabel2
+                    }
+                ]
+            },
+            {
+                "id": id2,
+                "label": self.boardLabel2,
+                "people": [
+                ]
+            }
+        ])

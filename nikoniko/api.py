@@ -30,3 +30,10 @@ def board(id: hug.types.number):
     '''Returns a board'''
     res = session.query(Board).filter_by(id=id).one()
     return board_schema.dump(res).data
+
+
+@hug.get('/boards')
+def boards():
+    '''Returns all boards'''
+    res = session.query(Board).all()
+    return boards_schema.dump(res).data
