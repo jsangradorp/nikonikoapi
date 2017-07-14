@@ -8,7 +8,7 @@ PEP8 := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pep8 --repeat --ignore=E202,E50
 PYTHON := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 
-DEFAULT_PYTHON := /usr/bin/python3
+DEFAULT_PYTHON := /usr/local/bin/python3
 VIRTUALENV := /usr/local/bin/virtualenv
 
 REQUIREMENTS := -r requirements.txt
