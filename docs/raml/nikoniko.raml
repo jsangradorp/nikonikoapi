@@ -70,10 +70,24 @@ resourceTypes:
           type: string
           required: true
 
-/reportedFeelings:
-  put:
+/reportedFeelings/boards/{boardId}/people/{personId}/date/{date}:
+  post:
     description: Insert or update a reportedFeeling
     body:
       application/json:
         schema: feeling
         example: !include examples/reportedfeeling-example.json
+  get:
+    description: |
+      Get the reportedFeeling
+      With boardId = boardId, personId = personId and date = date
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/reportedfeeling-example.json
+      404:
+        body:
+          application/json:
+            example: |
+              { "message": "reportedFeeling not found" }
