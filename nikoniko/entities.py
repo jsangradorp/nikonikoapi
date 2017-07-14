@@ -82,4 +82,14 @@ class ReportedFeeling(Base):
             self.date,
             self.feeling)
 
+
+class ReportedFeelingSchema(Schema):
+    person_id = fields.Int(dump_only=True)
+    board_id = fields.Int(dump_only=True)
+    date = fields.Date()
+    feeling = fields.Str()
+
+reportedfeeling_schema = ReportedFeelingSchema()
+reportedfeelings_schema = ReportedFeelingSchema(many=True)
+
 Base.metadata.create_all(engine)
