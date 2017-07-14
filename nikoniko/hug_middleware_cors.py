@@ -35,7 +35,6 @@ class CORSMiddleware(object):
         response.set_header('Access-Control-Allow-Credentials', str(self.allow_credentials).lower())
 
         if request.method == 'OPTIONS':  # check if we are handling a preflight request
-            print("ROUTES: {}".format(self.api.http.routes.items()))
             allowed_methods = set(
                 method
                 for _, routes in self.api.http.routes.items()
