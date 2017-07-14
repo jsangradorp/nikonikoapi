@@ -7,8 +7,13 @@ from nikoniko.entities import Session
 from nikoniko.entities import Person, person_schema, people_schema
 from nikoniko.entities import Board, board_schema, boards_schema
 
+from hug_middleware_cors import CORSMiddleware
+
 logger = logging.getLogger(__name__)
 session = Session()
+
+api = hug.API(__name__)
+api.http.add_middleware(CORSMiddleware(api))
 
 
 @hug.get('/people/{id}')
