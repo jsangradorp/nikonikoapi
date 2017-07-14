@@ -10,7 +10,7 @@ from nikoniko.entities import Person, person_schema, people_schema
 from nikoniko.entities import Board, board_schema, boards_schema
 from nikoniko.entities import ReportedFeeling, reportedfeeling_schema, reportedfeelings_schema
 
-from hug_middleware_cors import CORSMiddleware
+from nikoniko.hug_middleware_cors import CORSMiddleware
 
 logger = logging.getLogger(__name__)
 session = Session()
