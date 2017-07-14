@@ -3,6 +3,7 @@ import datetime
 
 import hug
 from sqlalchemy.orm import aliased
+from falcon import HTTP_404
 
 from nikoniko.entities import Session
 from nikoniko.entities import Person, person_schema, people_schema
@@ -46,7 +47,22 @@ def boards():
     return boards_schema.dump(res).data
 
 
-@hug.put('/reportedfeelings')
+@hug.get('/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}')
+def get_reportedFeeling(
+        board_id: hug.types.number,
+        person_id: hug.types.number,
+        date: hug.types.text,
+        response):
+    '''Returns a specific reported feeling for a board, person and date'''
+    try:
+        res = session.query(ReportedFeeling).filter_by(board_id=board_id, person_id=person_id, date=date).one()
+    except:
+        response.status = HTTP_404
+        return ''
+    return reportedfeeling_schema.dump(res).data
+
+
+@hug.post('/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}')
 def create_reportedFeeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
@@ -61,10 +77,3 @@ def create_reportedFeeling(
         session.add(reportedFeeling)
     session.commit()
     return reportedfeeling_schema.dump(reportedFeeling).data
-
-
-@hug.get('/reportedfeelings/{board_id}')
-def get_reportedFeeling(board_id: hug.types.number, person_id: hug.types.number, date: hug.types.text):
-    '''Returns a specific reported feeling for a board, person and date'''
-    res = session.query(ReportedFeeling).filter_by(board_id=board_id, person_id=person_id, date=date).one()
-    return reportedfeeling_schema.dump(res).data
