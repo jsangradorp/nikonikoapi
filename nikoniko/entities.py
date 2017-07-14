@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from marshmallow import Schema, fields
 
-engine = create_engine('sqlite:///:memory:', echo=True)
+engine = create_engine('sqlite:///:memory:', echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
