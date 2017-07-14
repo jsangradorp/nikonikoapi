@@ -34,9 +34,13 @@ def people():
 
 
 @hug.get('/boards/{id}')
-def board(id: hug.types.number):
+def board(id: hug.types.number, response):
     '''Returns a board'''
-    res = session.query(Board).filter_by(id=id).one()
+    try:
+        res = session.query(Board).filter_by(id=id).one()
+    except:
+        response.status = HTTP_404
+        return None
     return board_schema.dump(res).data
 
 
@@ -58,7 +62,7 @@ def get_reportedFeeling(
         res = session.query(ReportedFeeling).filter_by(board_id=board_id, person_id=person_id, date=date).one()
     except:
         response.status = HTTP_404
-        return ''
+        return None
     return reportedfeeling_schema.dump(res).data
 
 
