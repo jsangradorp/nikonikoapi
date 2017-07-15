@@ -19,19 +19,6 @@ session = Session()
 api = hug.API(__name__)
 api.http.add_middleware(CORSMiddleware(api))
 
-one_person = Person(id=1, label='Administrator')
-session.add(one_person)
-try:
-    session.commit()
-except:
-    session.rollback()
-one_board = Board(id=1, label='Global board')
-session.add(one_board)
-try:
-    session.commit()
-except:
-    session.rollback()
-
 
 @hug.post('/login')
 def login(username: hug.types.text, password: hug.types.text):
@@ -152,3 +139,27 @@ def create_reportedFeeling(
         session.add(reportedFeeling)
     session.commit()
     return reportedfeeling_schema.dump(reportedFeeling).data
+
+
+def bootstrap_db():
+    one_person = Person(id=1, label='Admin')
+    session.add(one_person)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+    one_user = User(user_id=1, name='Administrator', email='admin@example.com', person_id=1, password_hash='')
+    session.add(one_user)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+    one_board = Board(id=1, label='Global board')
+    session.add(one_board)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+
+
+bootstrap_db()
