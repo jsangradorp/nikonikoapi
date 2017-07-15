@@ -159,12 +159,14 @@ def create_reportedFeeling(
 
 def bootstrap_db():
     one_person = Person(id=1, label='Admin')
+    other_person = Person(id=2, label='Admin2')
     session.add(one_person)
+    session.add(other_person)
     try:
         session.commit()
     except:
         session.rollback()
-    one_user = User(user_id=1, name='Administrator', email='admin@example.com', person_id=1, password_hash='')
+    one_user = User(user_id=1, name='Administrator', email='admin@example.com', person_id=2, password_hash='')
     session.add(one_user)
     try:
         session.commit()
