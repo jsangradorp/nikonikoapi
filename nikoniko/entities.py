@@ -13,6 +13,19 @@ engine = create_engine('postgresql://nikoniko:awesomepassword@localhost/nikoniko
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
+class User(Base):
+    __tablename__ = 'users'
+    user_id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
+    name = Column(String(50))
+    email = Column(String(50), nullable=False, index=True, unique=True)
+    password_hash = Column(String(50))
+    person_id = Column(Integer, ForeignKey('people.id'))
+    person = relationship('Person', back_populates='user')
+
+    def __repr__(self):
+        return "<User(name='%s',email='%s',person_id=%d>)" % (self.name, self.email, self.person_id)
+
+
 membership = \
     Table(
         'membership',
@@ -33,6 +46,8 @@ class Person(Base):
     boards = relationship('Board', secondary=membership, back_populates='people')
     reported_feelings = relationship('ReportedFeeling')
 
+    user = relationship('User', back_populates='person', uselist=False)
+
     def __repr__(self):
         return "<Person(label='%s')>" % (self.label)
 
@@ -43,6 +58,16 @@ class PersonSchema(Schema):
 
 person_schema = PersonSchema()
 people_schema = PersonSchema(many=True)
+
+
+class UserSchema(Schema):
+    user_id = fields.Int(dump_only=True)
+    name = fields.Str()
+    email = fields.Str()
+    person = fields.Nested(PersonSchema)
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
 
 
 class Board(Base):
