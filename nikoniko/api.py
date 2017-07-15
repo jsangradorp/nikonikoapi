@@ -31,12 +31,12 @@ def login(email: hug.types.text, password: hug.types.text, response):
     except:
         response.status = HTTP_401
         return 'Invalid email and/or password for email: {0}'.format(email)
-    if (True): # This should really check the password, we just check user exists for now
+    if (True):  # This should really check the password, we just check user exists for now
         created = datetime.datetime.now()
         return {
             'user': user.user_id,
             'person': user.person_id,
-            'token' : jwt.encode(
+            'token': jwt.encode(
                 {
                     'user': user.user_id,
                     'created': created.isoformat(),
@@ -106,8 +106,8 @@ def boards():
 
 
 @hug.get(
-        '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
-        requires=token_key_authentication)
+    '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
+    requires=token_key_authentication)
 def get_reportedFeeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
@@ -116,10 +116,9 @@ def get_reportedFeeling(
     '''Returns a specific reported feeling for a board, person and date'''
     try:
         res = session.query(ReportedFeeling).filter_by(
-                        board_id=board_id,
-                        person_id=person_id,
-                        date=date
-                        ).one()
+            board_id=board_id,
+            person_id=person_id,
+            date=date).one()
     except:
         response.status = HTTP_404
         return None
@@ -127,8 +126,8 @@ def get_reportedFeeling(
 
 
 @hug.post(
-        '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
-        requires=token_key_authentication)
+    '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
+    requires=token_key_authentication)
 def create_reportedFeeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
@@ -137,21 +136,18 @@ def create_reportedFeeling(
     '''Creates a new reportedFeeling'''
     try:
         reportedFeeling = session.query(ReportedFeeling).filter_by(
-                                    board_id=board_id,
-                                    person_id=person_id,
-                                    date=date
-                                    ).one()
+            board_id=board_id,
+            person_id=person_id,
+            date=date).one()
         reportedFeeling.feeling = feeling
     except:
         reportedFeeling = ReportedFeeling(
-                            person_id=person_id,
-                            board_id=board_id,
-                            date=datetime.datetime.strptime(
-                                date,
-                                "%Y-%m-%d"
-                                ).date(),
-                            feeling=feeling
-                            )
+            person_id=person_id,
+            board_id=board_id,
+            date=datetime.datetime.strptime(
+                date,
+                "%Y-%m-%d").date(),
+            feeling=feeling)
         session.add(reportedFeeling)
     session.commit()
     return reportedfeeling_schema.dump(reportedFeeling).data

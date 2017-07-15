@@ -8,10 +8,11 @@ from sqlalchemy.orm import sessionmaker
 
 from marshmallow import Schema, fields
 
-#engine = create_engine('sqlite:///:memory:', echo=False)
+# engine = create_engine('sqlite:///:memory:', echo=False)
 engine = create_engine('postgresql://nikoniko:awesomepassword@localhost/nikoniko', echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
+
 
 class User(Base):
     __tablename__ = 'users'
