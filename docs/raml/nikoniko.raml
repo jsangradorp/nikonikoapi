@@ -5,6 +5,7 @@ baseUri: http://nikoniko.yokiyoki.com/api/{version}
 version: v1
 
 schemas:
+  credentials: !include schemas/credentials-schema.json
   feeling: !include schemas/feeling-schema.json
   person: !include schemas/person-schema.json
   board: !include schemas/board-schema.json
@@ -39,6 +40,26 @@ resourceTypes:
                 example: |
                   { "message": "<<resourcePathName|!singularize>> not found" }
 
+/login:
+  post:
+    description: Login endpoint
+    body:
+      application/json:
+        schema: credentials
+        example: !include examples/credentials-example.json
+    responses:
+      200:
+        headers:
+          Authorization:
+            description: Access Token
+            example: 5757gh76...
+            required: true
+      401:
+/users/{userId}:
+  get:
+    description: |
+      Get the User
+      With userId={userId}
 /people:
   type:
     collection:
