@@ -1,7 +1,7 @@
 from .context import nikoniko
 import logging
 from nikoniko.entities import engine
-from nikoniko.entities import Session, Person, Board, membership
+from nikoniko.entities import Session, Person, Board, ReportedFeeling, User, membership
 from nikoniko.api import person, people
 import nikoniko.api
 import hug
@@ -21,8 +21,10 @@ class TestAPI(object):
 
     def _clean_database(self):
         engine.execute(membership.delete())
-        engine.execute(Board.__table__.delete())
+        engine.execute(User.__table__.delete())
+        engine.execute(ReportedFeeling.__table__.delete())
         engine.execute(Person.__table__.delete())
+        engine.execute(Board.__table__.delete())
 
     def test_get_specific_person(self):
         # Given
