@@ -21,7 +21,16 @@ api.http.add_middleware(CORSMiddleware(api))
 
 one_person = Person(id=1, label='Administrator')
 session.add(one_person)
-session.commit()
+try:
+    session.commit()
+except:
+    session.rollback()
+one_board = Board(id=1, label='Global board')
+session.add(one_board)
+try:
+    session.commit()
+except:
+    session.rollback()
 
 
 @hug.post('/login')
