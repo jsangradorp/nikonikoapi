@@ -169,6 +169,8 @@ def bootstrap_db():
     except:
         session.rollback()
     one_board = Board(id=1, label='Global board')
+    one_board.people.append(one_person)
+    one_board.people.append(other_person)
     session.add(one_board)
     try:
         session.commit()
