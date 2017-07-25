@@ -165,10 +165,10 @@ def bootstrap_db():
         session.rollback()
     one_user = User(
         user_id=1,
-        name=b'John Smith',
-        email=b'john@example.com',
+        name='John Smith',
+        email='john@example.com',
         person_id=2,
-        password_hash=b'$2b$12$Rnm08hgYxWAjtORfhejsxeobah7tUR/APzWWPJAwbJspEL39H3IBa')
+        password_hash=bcrypt.hashpw('whocares'.encode(), bcrypt.gensalt()).decode())
     session.add(one_user)
     try:
         session.commit()
