@@ -19,7 +19,7 @@ class User(Base):
     user_id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
     name = Column(String(50))
     email = Column(String(50), nullable=False, index=True, unique=True)
-    password_hash = Column(String(50))
+    password_hash = Column(String(60))
     person_id = Column(Integer, ForeignKey('people.id'))
     person = relationship('Person', back_populates='user')
 

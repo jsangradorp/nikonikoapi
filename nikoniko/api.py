@@ -3,6 +3,7 @@ import datetime
 
 import hug
 import jwt
+import bcrypt
 from sqlalchemy.orm import aliased
 from falcon import HTTP_404
 from falcon import HTTP_401
@@ -31,7 +32,7 @@ def login(email: hug.types.text, password: hug.types.text, response):
     except:
         response.status = HTTP_401
         return 'Invalid email and/or password for email: {0}'.format(email)
-    if (True):  # This should really check the password, we just check user exists for now
+    if (bcrypt.checkpw(password.encode(), user.password_hash.encode())):
         created = datetime.datetime.now()
         return {
             'user': user.user_id,
@@ -154,15 +155,20 @@ def create_reportedFeeling(
 
 
 def bootstrap_db():
-    one_person = Person(id=1, label='Admin')
-    other_person = Person(id=2, label='Admin2')
+    one_person = Person(id=1, label='Ann')
+    other_person = Person(id=2, label='John')
     session.add(one_person)
     session.add(other_person)
     try:
         session.commit()
     except:
         session.rollback()
-    one_user = User(user_id=1, name='Administrator', email='admin@example.com', person_id=2, password_hash='')
+    one_user = User(
+        user_id=1,
+        name=b'John Smith',
+        email=b'john@example.com',
+        person_id=2,
+        password_hash=b'$2b$12$Rnm08hgYxWAjtORfhejsxeobah7tUR/APzWWPJAwbJspEL39H3IBa')
     session.add(one_user)
     try:
         session.commit()
