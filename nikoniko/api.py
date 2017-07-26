@@ -178,6 +178,14 @@ def bootstrap_db():
     one_board.people.append(one_person)
     one_board.people.append(other_person)
     session.add(one_board)
+    another_board = Board(id=2, label='The A Team')
+    another_board.people.append(one_person)
+    another_board.people.append(other_person)
+    session.add(another_board)
+    and_a_third__board = Board(id=3, label='The Harlem Globetrotters')
+    and_a_third__board.people.append(one_person)
+    and_a_third__board.people.append(other_person)
+    session.add(and_a_third__board)
     try:
         session.commit()
     except:
