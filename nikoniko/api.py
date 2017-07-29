@@ -161,7 +161,8 @@ def bootstrap_db():
     session.add(other_person)
     try:
         session.commit()
-    except:
+    except Exception as e:
+        print(e)
         session.rollback()
     one_user = User(
         user_id=1,
@@ -172,7 +173,8 @@ def bootstrap_db():
     session.add(one_user)
     try:
         session.commit()
-    except:
+    except Exception as e:
+        print(e)
         session.rollback()
     one_board = Board(id=1, label='Global board')
     one_board.people.append(one_person)
@@ -188,7 +190,8 @@ def bootstrap_db():
     session.add(and_a_third__board)
     try:
         session.commit()
-    except:
+    except Exception as e:
+        print(e)
         session.rollback()
 
 
