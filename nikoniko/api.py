@@ -64,7 +64,9 @@ def user(user_id: hug.types.number, response, user: hug.directives.user):
     '''Returns a user'''
     try:
         res = session.query(User).filter_by(user_id=user_id).one()
-    except:
+        boards = session.query(Board).join(Person.boards).filter(Person.id==res.person_id).all()
+        res.boards = boards
+    except Exception as e:
         response.status = HTTP_404
         return None
     return user_schema.dump(res).data

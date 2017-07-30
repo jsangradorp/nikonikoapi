@@ -61,16 +61,6 @@ person_schema = PersonSchema()
 people_schema = PersonSchema(many=True)
 
 
-class UserSchema(Schema):
-    user_id = fields.Int(dump_only=True)
-    name = fields.Str()
-    email = fields.Str()
-    person = fields.Nested(PersonSchema)
-
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
-
-
 class Board(Base):
     __tablename__ = 'boards'
     id = Column(Integer, Sequence('board_id_seq'), primary_key=True)
@@ -90,6 +80,22 @@ class BoardSchema(Schema):
 
 board_schema = BoardSchema()
 boards_schema = BoardSchema(many=True)
+
+
+class BoardInListSchema(Schema):
+    id = fields.Int(dump_only=True)
+    label = fields.Str()
+
+
+class UserSchema(Schema):
+    user_id = fields.Int(dump_only=True)
+    name = fields.Str()
+    email = fields.Str()
+    person = fields.Nested(PersonSchema)
+    boards = fields.Nested(BoardInListSchema,many=True)
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
 
 
 class ReportedFeeling(Base):
