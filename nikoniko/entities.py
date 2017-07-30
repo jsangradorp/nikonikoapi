@@ -27,6 +27,34 @@ class User(Base):
         return "<User(name='%s',email='%s',person_id=%d>)" % (self.name, self.email, self.person_id)
 
 
+class ReportedFeeling(Base):
+    __tablename__ = 'reportedfeelings'
+    person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
+    board_id = Column(Integer, ForeignKey('boards.id'), primary_key=True)
+    date = Column(Date, primary_key=True)
+    feeling = Column(String(10))
+
+    person = relationship('Person', back_populates='reported_feelings')
+    board = relationship('Board', back_populates='reported_feelings')
+
+    def __repr__(self):
+        return "<ReportedFeeling(person_id='%s', board_id='%s', date='%s', feeling='%s')>" % (
+            self.person_id,
+            self.board_id,
+            self.date,
+            self.feeling)
+
+
+class ReportedFeelingSchema(Schema):
+    person_id = fields.Int(dump_only=True)
+    board_id = fields.Int(dump_only=True)
+    date = fields.Date()
+    feeling = fields.Str()
+
+reportedfeeling_schema = ReportedFeelingSchema()
+reportedfeelings_schema = ReportedFeelingSchema(many=True)
+
+
 membership = \
     Table(
         'membership',
@@ -61,6 +89,12 @@ person_schema = PersonSchema()
 people_schema = PersonSchema(many=True)
 
 
+class PersonInBoardSchema(Schema):
+    id = fields.Int(dump_only=True)
+    label = fields.Str()
+    feelings = fields.Nested(ReportedFeelingSchema, many=True)
+
+
 class Board(Base):
     __tablename__ = 'boards'
     id = Column(Integer, Sequence('board_id_seq'), primary_key=True)
@@ -76,7 +110,7 @@ class Board(Base):
 class BoardSchema(Schema):
     id = fields.Int(dump_only=True)
     label = fields.Str()
-    people = fields.Nested(PersonSchema, many=True)
+    people = fields.Nested(PersonInBoardSchema, many=True)
 
 board_schema = BoardSchema()
 boards_schema = BoardSchema(many=True)
@@ -97,32 +131,5 @@ class UserSchema(Schema):
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
-
-class ReportedFeeling(Base):
-    __tablename__ = 'reportedfeelings'
-    person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
-    board_id = Column(Integer, ForeignKey('boards.id'), primary_key=True)
-    date = Column(Date, primary_key=True)
-    feeling = Column(String(10))
-
-    person = relationship('Person', back_populates='reported_feelings')
-    board = relationship('Board', back_populates='reported_feelings')
-
-    def __repr__(self):
-        return "<ReportedFeeling(person_id='%s', board_id='%s', date='%s', feeling='%s')>" % (
-            self.label,
-            self.board_id,
-            self.date,
-            self.feeling)
-
-
-class ReportedFeelingSchema(Schema):
-    person_id = fields.Int(dump_only=True)
-    board_id = fields.Int(dump_only=True)
-    date = fields.Date()
-    feeling = fields.Str()
-
-reportedfeeling_schema = ReportedFeelingSchema()
-reportedfeelings_schema = ReportedFeelingSchema(many=True)
 
 Base.metadata.create_all(engine)
