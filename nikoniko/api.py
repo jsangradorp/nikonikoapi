@@ -96,8 +96,8 @@ def board(id: hug.types.number, response):
     try:
         res = session.query(Board).filter_by(id=id).one()
         for person in res.people:
-            feelings = session.query(ReportedFeeling).filter(ReportedFeeling.board_id == id).filter(ReportedFeeling.person_id == person.id).all()
-            person.feelings = feelings
+            reportedfeelings = session.query(ReportedFeeling).filter(ReportedFeeling.board_id == id).filter(ReportedFeeling.person_id == person.id).all()
+            person.reportedfeelings = reportedfeelings
     except:
         response.status = HTTP_404
         return None

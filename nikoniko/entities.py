@@ -92,7 +92,7 @@ people_schema = PersonSchema(many=True)
 class PersonInBoardSchema(Schema):
     id = fields.Int(dump_only=True)
     label = fields.Str()
-    feelings = fields.Nested(ReportedFeelingSchema, many=True)
+    reportedfeelings = fields.Nested(ReportedFeelingSchema, many=True)
 
 
 class Board(Base):
