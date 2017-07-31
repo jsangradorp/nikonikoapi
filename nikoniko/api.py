@@ -112,7 +112,7 @@ def boards():
 
 
 @hug.get(
-    '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
+    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
     requires=token_key_authentication)
 def get_reportedFeeling(
         board_id: hug.types.number,
@@ -132,7 +132,7 @@ def get_reportedFeeling(
 
 
 @hug.post(
-    '/reportedfeelings/boards/{board_id}/people/{person_id}/date/{date}',
+    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
     requires=token_key_authentication)
 def create_reportedFeeling(
         board_id: hug.types.number,
