@@ -126,7 +126,7 @@ class UserSchema(Schema):
     name = fields.Str()
     email = fields.Str()
     person = fields.Nested(PersonSchema)
-    boards = fields.Nested(BoardInListSchema,many=True)
+    boards = fields.Nested(BoardInListSchema, many=True)
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)

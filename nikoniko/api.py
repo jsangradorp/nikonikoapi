@@ -56,7 +56,7 @@ def token_verify(token):
         return False
 
 
-token_key_authentication = hug.authentication.token(token_verify)
+token_key_authentication = hug.authentication.token(token_verify)  # pylint: disable=no-value-for-parameter
 
 
 @hug.get('/users/{user_id}', requires=token_key_authentication)
@@ -64,7 +64,7 @@ def user(user_id: hug.types.number, response, user: hug.directives.user):
     '''Returns a user'''
     try:
         res = session.query(User).filter_by(user_id=user_id).one()
-        boards = session.query(Board).join(Person.boards).filter(Person.id==res.person_id).all()
+        boards = session.query(Board).join(Person.boards).filter(Person.id == res.person_id).all()
         res.boards = boards
     except Exception as e:
         response.status = HTTP_404
