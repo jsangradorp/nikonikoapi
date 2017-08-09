@@ -1,16 +1,28 @@
 from .context import nikoniko
 import logging
+import datetime
 from nikoniko.entities import engine
 from nikoniko.entities import Session, Person, Board, ReportedFeeling, User, membership
 from nikoniko.api import person, people
 from falcon import HTTP_404
 import nikoniko.api
 import hug
+import jwt
 import pytest
 import sqlalchemy
 
 logger = logging.getLogger(__name__)
 session = Session()
+
+
+token = jwt.encode(
+    {
+        'user': 1,
+        'created': datetime.datetime.now().isoformat()
+    },
+    'super-secret-key-please-change',
+    algorithm='HS256'
+)
 
 
 class TestAPI(object):
@@ -35,14 +47,14 @@ class TestAPI(object):
         session.commit()
         id = person.id
         # When
-        response = hug.test.get(nikoniko.api, '/people/{}'.format(id), headers={'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoxLCJjcmVhdGVkIjoiMjAxNy0wOC0wN1QwMDo0NzozMS4wNTc0MzMiLCJleHAiOjE1MDIxNDYwNTEuMDU3NDMzfQ.KpKQCEJV0A5xLKoPAewSR8om6weNDChxOzDn73JEXU8'})
+        response = hug.test.get(nikoniko.api, '/people/{}'.format(id), headers={'Authorization': token})
         # Then
         assert(response.data == {
             "id": id,
             "label": self.personLabel1
         })
         # Then
-        response = hug.test.get(nikoniko.api, '/people/-1', headers={'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoxLCJjcmVhdGVkIjoiMjAxNy0wOC0wN1QwMDo0NzozMS4wNTc0MzMiLCJleHAiOjE1MDIxNDYwNTEuMDU3NDMzfQ.KpKQCEJV0A5xLKoPAewSR8om6weNDChxOzDn73JEXU8'})
+        response = hug.test.get(nikoniko.api, '/people/-1', headers={'Authorization': token})
         assert(response.status == HTTP_404)
 
     def test_get_all_people(self):
@@ -56,7 +68,7 @@ class TestAPI(object):
         id1 = person1.id
         id2 = person2.id
         # When
-        response = hug.test.get(nikoniko.api, '/people', headers={'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoxLCJjcmVhdGVkIjoiMjAxNy0wOC0wN1QwMDo0NzozMS4wNTc0MzMiLCJleHAiOjE1MDIxNDYwNTEuMDU3NDMzfQ.KpKQCEJV0A5xLKoPAewSR8om6weNDChxOzDn73JEXU8'})
+        response = hug.test.get(nikoniko.api, '/people', headers={'Authorization': token})
         # Then
         assert(response.data == [
             {
@@ -80,7 +92,7 @@ class TestAPI(object):
         id1 = board1.id
         pid1 = person1.id
         # When
-        response = hug.test.get(nikoniko.api, '/boards/{}'.format(id1), headers={'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoxLCJjcmVhdGVkIjoiMjAxNy0wOC0wN1QwMDo0NzozMS4wNTc0MzMiLCJleHAiOjE1MDIxNDYwNTEuMDU3NDMzfQ.KpKQCEJV0A5xLKoPAewSR8om6weNDChxOzDn73JEXU8'})
+        response = hug.test.get(nikoniko.api, '/boards/{}'.format(id1), headers={'Authorization': token})
         # Then
         assert(response.data == {
             "id": id1,
@@ -111,7 +123,7 @@ class TestAPI(object):
         pid2 = person2.id
         id2 = board2.id
         # When
-        response = hug.test.get(nikoniko.api, '/boards', headers={'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoxLCJjcmVhdGVkIjoiMjAxNy0wOC0wN1QwMDo0NzozMS4wNTc0MzMiLCJleHAiOjE1MDIxNDYwNTEuMDU3NDMzfQ.KpKQCEJV0A5xLKoPAewSR8om6weNDChxOzDn73JEXU8'})
+        response = hug.test.get(nikoniko.api, '/boards', headers={'Authorization': token})
         # Then
         assert(response.data == [
             {

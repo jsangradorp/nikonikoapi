@@ -23,9 +23,6 @@ class User(Base):
     person_id = Column(Integer, ForeignKey('people.id'))
     person = relationship('Person', back_populates='user')
 
-    def __repr__(self):
-        return "<User(name='%s',email='%s',person_id=%d>)" % (self.name, self.email, self.person_id)
-
 
 class ReportedFeeling(Base):
     __tablename__ = 'reportedfeelings'
@@ -36,13 +33,6 @@ class ReportedFeeling(Base):
 
     person = relationship('Person', back_populates='reported_feelings')
     board = relationship('Board', back_populates='reported_feelings')
-
-    def __repr__(self):
-        return "<ReportedFeeling(person_id='%s', board_id='%s', date='%s', feeling='%s')>" % (
-            self.person_id,
-            self.board_id,
-            self.date,
-            self.feeling)
 
 
 class ReportedFeelingSchema(Schema):
@@ -77,9 +67,6 @@ class Person(Base):
 
     user = relationship('User', back_populates='person', uselist=False)
 
-    def __repr__(self):
-        return "<Person(label='%s')>" % (self.label)
-
 
 class PersonSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -102,9 +89,6 @@ class Board(Base):
 
     people = relationship('Person', secondary=membership, back_populates='boards')
     reported_feelings = relationship('ReportedFeeling')
-
-    def __repr__(self):
-        return "<Board(label='%s')>" % (self.label)
 
 
 class BoardSchema(Schema):

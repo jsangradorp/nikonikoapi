@@ -6,3 +6,5 @@ __pycache__
 .~lock.*#
 /build/
 /.idea/
+/.coverage
+/htmlcov/
