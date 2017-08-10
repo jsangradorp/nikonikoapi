@@ -9,7 +9,9 @@ from sqlalchemy.orm import sessionmaker
 from marshmallow import Schema, fields
 
 # engine = create_engine('sqlite:///:memory:', echo=False)
-engine = create_engine('postgresql://nikoniko:awesomepassword@localhost/nikoniko', echo=False)
+engine = create_engine(
+    'postgresql://nikoniko:awesomepassword@localhost/nikoniko',
+    echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
@@ -62,7 +64,10 @@ class Person(Base):
     id = Column(Integer, Sequence('person_id_seq'), primary_key=True)
     label = Column(String(50))
 
-    boards = relationship('Board', secondary=membership, back_populates='people')
+    boards = relationship(
+        'Board',
+        secondary=membership,
+        back_populates='people')
     reported_feelings = relationship('ReportedFeeling')
 
     user = relationship('User', back_populates='person', uselist=False)
@@ -87,7 +92,10 @@ class Board(Base):
     id = Column(Integer, Sequence('board_id_seq'), primary_key=True)
     label = Column(String(50))
 
-    people = relationship('Person', secondary=membership, back_populates='boards')
+    people = relationship(
+        'Person',
+        secondary=membership,
+        back_populates='boards')
     reported_feelings = relationship('ReportedFeeling')
 
 

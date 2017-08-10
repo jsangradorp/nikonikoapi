@@ -12,7 +12,8 @@ from nikoniko.entities import Session
 from nikoniko.entities import User, user_schema, users_schema
 from nikoniko.entities import Person, person_schema, people_schema
 from nikoniko.entities import Board, board_schema, boards_schema
-from nikoniko.entities import ReportedFeeling, reportedfeeling_schema, reportedfeelings_schema
+from nikoniko.entities import ReportedFeeling, reportedfeeling_schema
+from nikoniko.entities import reportedfeelings_schema
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
@@ -56,7 +57,9 @@ def token_verify(token):
         return False
 
 
-token_key_authentication = hug.authentication.token(token_verify)  # pylint: disable=no-value-for-parameter
+token_key_authentication = \
+    hug.authentication.token(  # pylint: disable=no-value-for-parameter
+        token_verify)
 
 
 @hug.get('/users/{user_id}', requires=token_key_authentication)
@@ -64,7 +67,10 @@ def user(user_id: hug.types.number, response, user: hug.directives.user):
     '''Returns a user'''
     try:
         res = session.query(User).filter_by(user_id=user_id).one()
-        boards = session.query(Board).join(Person.boards).filter(Person.id == res.person_id).all()
+        boards = session.query(
+            Board).join(
+                Person.boards).filter(
+                    Person.id == res.person_id).all()
         res.boards = boards
     except Exception as e:
         response.status = HTTP_404
@@ -96,7 +102,10 @@ def board(id: hug.types.number, response):
     try:
         res = session.query(Board).filter_by(id=id).one()
         for person in res.people:
-            reportedfeelings = session.query(ReportedFeeling).filter(ReportedFeeling.board_id == id).filter(ReportedFeeling.person_id == person.id).all()
+            reportedfeelings = session.query(
+                ReportedFeeling).filter(
+                    ReportedFeeling.board_id == id).filter(
+                        ReportedFeeling.person_id == person.id).all()
             person.reportedfeelings = reportedfeelings
     except:
         response.status = HTTP_404
@@ -174,7 +183,9 @@ def bootstrap_db():
         name='John Smith',
         email='john@example.com',
         person_id=2,
-        password_hash=bcrypt.hashpw('whocares'.encode(), bcrypt.gensalt()).decode())
+        password_hash=bcrypt.hashpw(
+            'whocares'.encode(),
+            bcrypt.gensalt()).decode())
     session.add(one_user)
     try:
         session.commit()
