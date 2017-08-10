@@ -1,3 +1,5 @@
 - Up coverage to >100%
 - Move spec to Swagger
-
+- Put connection string parts and secret_string in environment variables
+- Decide via environment string whether to bootstrap DB or not
+- Hint to use HTTPS or refuse to use HTTP
