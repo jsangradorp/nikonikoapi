@@ -22,6 +22,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 session = Session()
 
+secret_key = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
+
 api = hug.API(__name__)
 api.http.add_middleware(CORSMiddleware(api))
 
@@ -29,7 +31,6 @@ api.http.add_middleware(CORSMiddleware(api))
 @hug.post('/login')
 def login(email: hug.types.text, password: hug.types.text, response):
     '''Authenticate and return a token'''
-    secret_key = 'super-secret-key-please-change'
     try:
         user = session.query(User).filter_by(email=email).one()
     except:
@@ -52,7 +53,6 @@ def login(email: hug.types.text, password: hug.types.text, response):
 
 
 def token_verify(token):
-    secret_key = 'super-secret-key-please-change'
     try:
         return jwt.decode(token, secret_key, algorithm='HS256')
     except jwt.DecodeError:

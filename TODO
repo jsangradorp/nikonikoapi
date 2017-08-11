@@ -1,4 +1,4 @@
 - Up coverage to >100%
 - Move spec to Swagger
-- Put connection string parts and secret_string in environment variables
+- Put connection string parts in environment variables
 - Hint to use HTTPS or refuse to use HTTP

@@ -7,6 +7,8 @@ PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --msg-template="{path}
 PEP8 := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pep8 --repeat
 PYTHON := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
+JWT_SECRET_KEY := fake-secret-key
+export JWT_SECRET_KEY
 
 DEFAULT_PYTHON := /usr/local/bin/python3
 VIRTUALENV := /usr/local/bin/virtualenv

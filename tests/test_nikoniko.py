@@ -1,6 +1,7 @@
 from .context import nikoniko
 import logging
 import datetime
+import os
 from nikoniko.entities import engine
 from nikoniko.entities import Session, Person
 from nikoniko.entities import Board, ReportedFeeling, User, membership
@@ -16,12 +17,14 @@ logger = logging.getLogger(__name__)
 session = Session()
 
 
+secret_key = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
+
 token = jwt.encode(
     {
         'user': 1,
         'created': datetime.datetime.now().isoformat()
     },
-    'super-secret-key-please-change',
+    secret_key,
     algorithm='HS256'
 )
 
