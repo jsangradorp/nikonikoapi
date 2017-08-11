@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+import os
 import hug
 import jwt
 import bcrypt
@@ -17,6 +18,7 @@ from nikoniko.entities import reportedfeelings_schema
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 session = Session()
 
@@ -211,4 +213,7 @@ def bootstrap_db():
         session.rollback()
 
 
-bootstrap_db()
+if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
+        'yes', 'y', 'true', 't', '1']:
+    logger.info('Bootstrapping DB')
+    bootstrap_db()
