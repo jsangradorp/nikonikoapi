@@ -1,3 +1,5 @@
+import os
+import logging
 from sqlalchemy import Column, Integer, String, Date, Sequence
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
@@ -8,9 +10,30 @@ from sqlalchemy.orm import sessionmaker
 
 from marshmallow import Schema, fields
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+db_driver = os.getenv('DB_DRIVER', 'postgresql')
+db_host = os.getenv('DB_HOST', 'localhost')
+db_port = os.getenv('DB_PORT', '5432')
+db_dbname = os.getenv('DB_DBNAME', 'nikoniko')
+db_username = os.getenv('DB_USERNAME', os.getenv('USER', None))
+db_password = os.getenv('DB_PASSWORD', None)
+db_connstring = '{}://{}{}{}{}:{}/{}'.format(
+        db_driver,
+        db_username if db_username else '',
+        ':{}'.format(db_password) if db_password else '',
+        '@' if db_username else '',
+        db_host,
+        db_port,
+        db_dbname)
 # engine = create_engine('sqlite:///:memory:', echo=False)
+# engine = create_engine(
+#     'postgresql://nikoniko:awesomepassword@localhost:5432/nikoniko',
+#     echo=False)
+logger.debug('db_connstring: [{}]'.format(db_connstring))
 engine = create_engine(
-    'postgresql://nikoniko:awesomepassword@localhost/nikoniko',
+    db_connstring,
     echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
