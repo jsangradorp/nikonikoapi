@@ -27,6 +27,11 @@ requirements:
 	fi
 bootstrap: venv requirements
 
+doc: docs/spec/index.html
+
+docs/spec/index.html: docs/spec/nikoniko.yaml
+	spectacle -t docs/spec docs/spec/nikoniko.yaml
+
 check-coding-style: bootstrap
 	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH)
 	$(PYLINT) -E $(PYTHON_MODULES)
