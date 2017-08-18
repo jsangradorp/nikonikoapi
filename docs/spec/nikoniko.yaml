@@ -1,11 +1,11 @@
 swagger: '2.0'
 info:
-  version: v1
-  title: Nikoniko API
-  description: ''
-host: nikoniko.yokiyoki.com
+  version: v2
+  title: Nikoniko boards API
+  description: 'Manage Nikoniko boards and users'
+host: api.nikonikoboards.com
 schemes:
-  - http
+  - https
 paths:
   '/reportedFeelings/boards/{boardId}/people/{personId}/dates/{date}':
     parameters:
