@@ -30,7 +30,7 @@ bootstrap: venv requirements
 doc: docs/spec/index.html
 
 docs/spec/index.html: docs/spec/openapi.yaml
-	spectacle -t docs/spec docs/spec/openapi.yaml
+	bootprint openapi docs/spec/openapi.yaml docs/spec/
 
 check-coding-style: bootstrap
 	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH)
