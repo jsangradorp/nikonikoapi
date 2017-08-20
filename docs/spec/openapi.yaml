@@ -187,27 +187,27 @@ paths:
         '400':
           description: 'Error: Bad request: missing parameter/s'
           content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                errors:
-                  type: object
-                  additionalProperties:
-                    type: string
-              example: |
-                {
-                  "errors": {
-                    "password": "Required parameter 'password' not supplied"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: string
+                example: |
+                  {
+                    "errors": {
+                      "password": "Required parameter 'password' not supplied"
+                    }
                   }
-                }
         '401':
           description: 'Error: Unauthorized: bad email/password combination'
           content:
-          application/json:
-            schema:
-              type: string
-              example: '"Invalid email and/or password for email: john@example.com"'
+            application/json:
+              schema:
+                type: string
+                example: '"Invalid email and/or password for email: john@example.com"'
         '200':
           description: 'User has been identified correctly, this is the authentication token'
           content:

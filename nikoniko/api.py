@@ -50,6 +50,9 @@ def login(email: hug.types.text, password: hug.types.text, response):
                 secret_key,
                 algorithm='HS256'
             )}
+    else:
+        response.status = HTTP_401
+        return 'Invalid email and/or password for email: {0}'.format(email)
 
 
 def token_verify(token):
