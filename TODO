@@ -1,5 +1,4 @@
 - Backoffice
-  - Update password
   - Reset password
 - Add authorization to the spec definition
 - Properly set logging level as per environment and with a sensible default
