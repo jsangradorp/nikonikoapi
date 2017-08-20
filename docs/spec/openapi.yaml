@@ -225,6 +225,57 @@ paths:
                   token:
                     type: string
                     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoiMjAxNy0wOC0xOVQxODozNjo1NC42NTcyMzciLCJ1c2VyIjoyLCJleHAiOjE1MDMyNDcwMTQuNjU3MjM3fQ.cIxYz0GrI-zn-Kx8XBT1TrbLaXgyNRd2gLMxLpqRYMo'
+  /password/{user_id}:
+    summary: 'Manage a users password'
+    put:
+      summary: 'Update a users password'
+      parameters:
+        user_id:
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  format: password
+            example: |
+              {
+                "password": "myshinynewpassword"
+              }
+      responses:
+        '400':
+          description: 'Error: Bad request: missing parameter/s'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: string
+                example: |
+                  {
+                    "errors": {
+                      "password": "Required parameter 'password' not supplied"
+                    }
+                  }
+        '401':
+          description: 'Error: Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: string
+                example: '"Authenticated user isn''t allowed to update the password for requested user"'
+        '204':
+          description: 'Password succesfully updated'
   '/users/{userId}':
     summary: 'Manage specific users of the API'
     get:
