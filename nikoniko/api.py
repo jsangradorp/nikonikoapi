@@ -18,7 +18,7 @@ from nikoniko.entities import reportedfeelings_schema
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 session = Session()
 
@@ -67,6 +67,7 @@ token_key_authentication = \
 @hug.get('/users/{user_id}', requires=token_key_authentication)
 def user(user_id: hug.types.number, response, user: hug.directives.user):
     '''Returns a user'''
+    logger.debug('Authenticated user reported: {}'.format(user))
     try:
         res = session.query(User).filter_by(user_id=user_id).one()
         boards = session.query(

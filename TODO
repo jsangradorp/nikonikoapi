@@ -1,3 +1,5 @@
+- Backoffice
+- Properly set logging level as per environment and with a sensible default
 - Up coverage to >100%
 - Move spec to Swagger
 - Review security

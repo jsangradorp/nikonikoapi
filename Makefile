@@ -27,6 +27,12 @@ requirements:
 	fi
 bootstrap: venv requirements
 
+serve-docs:
+	if ! (docker images swaggerapi/swagger-ui | grep -q swaggerapi/swagger-ui) ; then \
+	    docker pull swaggerapi/swagger-ui; \
+	fi
+	docker run -p 8081:8080 -e "SWAGGER_JSON=/spec/openapi.yaml" -v $(shell pwd)/docs/spec:/spec swaggerapi/swagger-ui
+
 check-coding-style: bootstrap
 	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH)
 	$(PYLINT) -E $(PYTHON_MODULES)

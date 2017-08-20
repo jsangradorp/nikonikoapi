@@ -1,0 +1,356 @@
+openapi: '3.0.0'
+info:
+  title: Nikoniko boards API
+  description: 'Manage Nikoniko boards and users'
+  version: v3
+servers:
+- url: 'https://api.nikonikoboards.com'
+  description: 'Main Nikoniko Boards API URL'
+components:
+  schemas:
+    UserType:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        person:
+          $ref: '#/components/schemas/PersonType'
+        boards:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardType'
+    BoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+    RetrievedBoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonInBoardType'
+    PersonType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+    PersonInBoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        reportedfeelings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportedFeelingType'
+    ReportedFeelingType:
+      type: object
+      properties:
+        board_id:
+          type: integer
+        person_id:
+          type: integer
+        date:
+          type: string
+          format: date
+        feeling:
+          type: string
+          enum:
+          - none
+          - ok
+          - good
+          - bad
+  examples:
+    PersonExample:
+      summary: 'Example person'
+      value: |
+        {
+          id: 1
+          label: "John Smith"
+        }
+    PeopleExample:
+      summary: 'Example list of people'
+      value: |
+        [
+          {
+            id: 1,
+            label: "Alice"
+          },
+          {
+            id: 2,
+            label: "Bob"
+          }
+        ]
+    RetrievedUserExample:
+      summary: 'Example of a users data'
+      value: |
+        {
+          "person": {
+            "id": 2,
+            "label": "John"
+          },
+          "email": "john@example.com",
+          "boards": [
+            {
+              "id": 1,
+              "label": "Global board"
+            },
+            {
+              "id": 2,
+              "label": "The A Team"
+            },
+            {
+              "id": 3,
+              "label": "The Harlem Globetrotters"
+            }
+          ],
+          "name": "John Smith",
+          "user_id": 1
+        }
+    RetrievedBoardExample:
+      summary: 'Example of a board data'
+      value: |
+        {
+          "label": "Global board",
+          "id": 1,
+          "people": [
+            {
+              "label": "Ann",
+              "reportedfeelings": [],
+              "id": 1
+            },
+            {
+              "label": "John",
+              "reportedfeelings": [
+                {
+                  "person_id": 2,
+                  "date": "2017-08-15",
+                  "feeling": "good",
+                  "board_id": 1
+                }
+              ],
+              "id": 2
+            }
+          ]
+        }
+    ReportedFeelingExample:
+      summary: 'Example of a reported feeling'
+      value: |
+        {
+          "person_id": 3,
+          "date": "2017-08-20",
+          "feeling": "ok",
+          "board_id": 4
+        }
+paths:
+  '/login':
+    summary: 'Identify yourself to the API'
+    post:
+      summary: 'Identify yourself through user and password'
+      requestBody:
+        required: true
+        content:
+          'application/x-www-form-urlencoded; charset=UTF-8':
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+            encoding:
+              email:
+                style: form
+              password:
+                style: form
+            example: 'email=john@example.com&password=whocares'
+      responses:
+        '400':
+          description: 'Error: Bad request: missing parameter/s'
+          content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                errors:
+                  type: object
+                  additionalProperties:
+                    type: string
+              example: |
+                {
+                  "errors": {
+                    "password": "Required parameter 'password' not supplied"
+                  }
+                }
+        '401':
+          description: 'Error: Unauthorized: bad email/password combination'
+          content:
+          application/json:
+            schema:
+              type: string
+              example: '"Invalid email and/or password for email: john@example.com"'
+        '200':
+          description: 'User has been identified correctly, this is the authentication token'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: integer
+                    description: 'Identifier of the identified user'
+                  person:
+                    type: integer
+                    description: 'Identifier of the person associated with the user, if any'
+                    required: false
+                  token:
+                    type: string
+                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoiMjAxNy0wOC0xOVQxODozNjo1NC42NTcyMzciLCJ1c2VyIjoyLCJleHAiOjE1MDMyNDcwMTQuNjU3MjM3fQ.cIxYz0GrI-zn-Kx8XBT1TrbLaXgyNRd2gLMxLpqRYMo'
+  '/users/{userId}':
+    summary: 'Manage specific users of the API'
+    get:
+      summary: 'Retrieve a specific user'
+      parameters:
+      - name: userId
+        description: 'identifier of the user we want to retrieve'
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '404':
+          description: 'User not found'
+        '200':
+          description: 'User found, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserType'
+              examples:
+              - $ref: '#/components/examples/RetrievedUserExample'
+  '/people':
+    summary: 'Manage people involved in boards'
+    get:
+      summary: 'Retrieve people, optionally filtering by membership to a specific board'
+      parameters:
+      - name: inBoard
+        description: 'board which retrieved people must be members of, otherwise retrieve all people registered in the system'
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 'List of requested people to be returned (can be empty)'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonType'
+              examples:
+              - $ref: '#/components/examples/PeopleExample'
+
+  '/boards/{boardId}':
+    summary: 'Manage specific boards of the API'
+    parameters:
+    - name: boardId
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: 'Retrieve a specific board'
+      parameters:
+      - name: fromDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: toDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '404':
+          description: 'Board not found'
+        '200':
+          description: 'Board found, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrievedBoardType'
+              examples:
+              - $ref: '#components/examples/RetrievedBoardExample'
+  '/reportedFeelings/boards/{boardId}/people/{personId}/dates/{date}':
+    summary: 'Manage feelings reported by people'
+    parameters:
+    - name: boardId
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: personId
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: date
+      in: path
+      required: true
+      schema:
+        type: string
+        format: date
+    get:
+      summary: 'Retrieve the reported feeling by a user about a board on a date'
+      responses:
+        '404':
+          description: 'Reported feeling not found'
+        '200':
+          description: 'Requested reported feeling found, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportedFeelingType'
+              examples:
+              - $ref: '#/components/examples/ReportedFeelingExample'
+    post:
+      summary: 'Insert or update a reportedFeeling'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportedFeelingType'
+            examples:
+            - $ref: '#/components/examples/ReportedFeelingExample'
+      responses:
+        '200':
+          description: 'Reported feeling has been stored, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportedFeelingType'
+              examples:
+              - $ref: '#/components/examples/ReportedFeelingExample'
