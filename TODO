@@ -2,6 +2,7 @@
   - Update password
   - Reset password
 - Properly set logging level as per environment and with a sensible default
+- Review and account for wrong input and other corner cases. Proper error management
 - Up coverage to >100%
-- Move spec to Swagger
 - Review security
+- Proper release procedure
