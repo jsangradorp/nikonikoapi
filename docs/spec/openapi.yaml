@@ -8,21 +8,7 @@ servers:
   description: 'Main Nikoniko Boards API URL'
 components:
   schemas:
-    PersonType:
-      type: object
-      properties:
-        id:
-          type: integer
-        label:
-          type: string
-    BoardType:
-      type: object
-      properties:
-        id:
-          type: integer
-        label:
-          type: string
-    RetrievedUserType:
+    UserType:
       type: object
       properties:
         user_id:
@@ -38,6 +24,59 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardType'
+    BoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+    RetrievedBoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonInBoardType'
+    PersonType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+    PersonInBoardType:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        reportedfeelings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportedFeelingType'
+    ReportedFeelingType:
+      type: object
+      properties:
+        board_id:
+          type: integer
+        person_id:
+          type: integer
+        date:
+          type: string
+          format: date
+        feeling:
+          type: string
+          enum:
+          - none
+          - ok
+          - good
+          - bad
   examples:
     PersonExample:
       summary: 'Example person'
@@ -85,6 +124,41 @@ components:
           "name": "John Smith",
           "user_id": 1
         }
+    RetrievedBoardExample:
+      summary: 'Example of a board data'
+      value: |
+        {
+          "label": "Global board",
+          "id": 1,
+          "people": [
+            {
+              "label": "Ann",
+              "reportedfeelings": [],
+              "id": 1
+            },
+            {
+              "label": "John",
+              "reportedfeelings": [
+                {
+                  "person_id": 2,
+                  "date": "2017-08-15",
+                  "feeling": "good",
+                  "board_id": 1
+                }
+              ],
+              "id": 2
+            }
+          ]
+        }
+    ReportedFeelingExample:
+      summary: 'Example of a reported feeling'
+      value: |
+        {
+          "person_id": 3,
+          "date": "2017-08-20",
+          "feeling": "ok",
+          "board_id": 4
+        }
 paths:
   '/login':
     summary: 'Identify yourself to the API'
@@ -93,7 +167,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          'application/x-www-form-urlencoded; charset=UTF-8':
             schema:
               type: object
               properties:
@@ -103,6 +177,12 @@ paths:
                 password:
                   type: string
                   format: password
+            encoding:
+              email:
+                style: form
+              password:
+                style: form
+            example: 'email=john@example.com&password=whocares'
       responses:
         '400':
           description: 'Error: Bad request: missing parameter/s'
@@ -164,9 +244,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RetrievedUserType'
+                $ref: '#/components/schemas/UserType'
               examples:
-              - $ref: '#/components/schemas/RetrievedUserExample'
+              - $ref: '#/components/examples/RetrievedUserExample'
   '/people':
     summary: 'Manage people involved in boards'
     get:
@@ -189,80 +269,88 @@ paths:
               examples:
               - $ref: '#/components/examples/PeopleExample'
 
-  '/reportedFeelings/boards/{boardId}/people/{personId}/dates/{date}':
+  '/boards/{boardId}':
+    summary: 'Manage specific boards of the API'
     parameters:
-      - name: boardId
-        in: path
-        required: true
-        type: string
-      - name: personId
-        in: path
-        required: true
-        type: string
-      - name: date
-        in: path
-        required: true
-        type: string
+    - name: boardId
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
-      operationId: GET_reportedFeelings-boards-boardId-people-personId-dates-date
-      description: |
-        Get the reportedFeeling
-        With boardId = boardId, personId = personId and date = date
-      produces:
-        - application/json
+      summary: 'Retrieve a specific board'
+      parameters:
+      - name: fromDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: toDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '404':
+          description: 'Board not found'
+        '200':
+          description: 'Board found, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrievedBoardType'
+              examples:
+              - $ref: '#components/examples/RetrievedBoardExample'
+  '/reportedFeelings/boards/{boardId}/people/{personId}/dates/{date}':
+    summary: 'Manage feelings reported by people'
+    parameters:
+    - name: boardId
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: personId
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: date
+      in: path
+      required: true
+      schema:
+        type: string
+        format: date
+    get:
+      summary: 'Retrieve the reported feeling by a user about a board on a date'
+      responses:
+        '404':
+          description: 'Reported feeling not found'
+        '200':
+          description: 'Requested reported feeling found, data in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportedFeelingType'
+              examples:
+              - $ref: '#/components/examples/ReportedFeelingExample'
+    post:
+      summary: 'Insert or update a reportedFeeling'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportedFeelingType'
+            examples:
+            - $ref: '#/components/examples/ReportedFeelingExample'
       responses:
         '200':
-          description: ''
-          examples:
+          description: 'Reported feeling has been stored, data in response'
+          content:
             application/json:
-              personId: 1
-              boardId: 1
-              date: '2017-05-28'
-              feeling: bad
-        '404':
-          description: ''
-          examples:
-            application/json:
-              message: reportedFeeling not found
-    post:
-      operationId: POST_reportedFeelings-boards-boardId-people-personId-dates-date
-      description: Insert or update a reportedFeeling
-      consumes:
-        - application/json
-      parameters:
-        - name: body
-          in: body
-          schema:
-            example:
-              personId: 1
-              boardId: 1
-              date: '2017-05-28'
-              feeling: bad
-            $ref: '#/definitions/feeling'
-      responses:
-        default:
-          description: ''
-          schema: {}
-  '/boards/{boardId}':
-    parameters:
-      - name: boardId
-        in: path
-        required: true
-        type: string
-    get:
-      operationId: GET_boards-boardId
-      parameters:
-        - name: fromDate
-          in: query
-          required: true
-          type: string
-        - name: toDate
-          in: query
-          required: true
-          type: string
-      responses:
-        default:
-          description: ''
-          schema: {}
-x-basePath: '/api/{version}'
-
+              schema:
+                $ref: '#/components/schemas/ReportedFeelingType'
+              examples:
+              - $ref: '#/components/examples/ReportedFeelingExample'
