@@ -69,18 +69,25 @@ token_key_authentication = \
 
 
 @hug.put('/password/{user_id}', requires=token_key_authentication)
-def password(user_id: hug.types.number, password: hug.types.text, response, authenticated_user: hug.directives.user):
+def password(
+        user_id: hug.types.number,
+        password: hug.types.text,
+        response,
+        authenticated_user: hug.directives.user):
     '''Update a users' password '''
     try:
         found_user = session.query(User).filter_by(user_id=user_id).one()
     except:
         response.status = HTTP_404
         return None
-    logger.debug('user_id: {}, authenticated_user: {}'.format(user_id, authenticated_user))
+    logger.debug(
+            'user_id: {}, authenticated_user: {}'.format(
+                user_id, authenticated_user))
     if user_id != authenticated_user['user']:
         response.status = HTTP_401
-        return 'Authenticated user isn\'t allowed to update the password for requested user'
-    found_user.password_hash=bcrypt.hashpw(
+        return '''Authenticated user isn\'t allowed to update \
+                the password for requested user'''
+    found_user.password_hash = bcrypt.hashpw(
         password.encode(),
         bcrypt.gensalt()).decode()
     session.add(found_user)
