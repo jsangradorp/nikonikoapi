@@ -41,7 +41,7 @@ Session = sessionmaker(bind=engine)
 
 class User(Base):
     __tablename__ = 'users'
-    user_id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
+    user_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
     email = Column(String(50), nullable=False, index=True, unique=True)
     password_hash = Column(String(60))
@@ -84,7 +84,7 @@ membership = \
 
 class Person(Base):
     __tablename__ = 'people'
-    id = Column(Integer, Sequence('person_id_seq'), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
 
     boards = relationship(
@@ -112,7 +112,7 @@ class PersonInBoardSchema(Schema):
 
 class Board(Base):
     __tablename__ = 'boards'
-    id = Column(Integer, Sequence('board_id_seq'), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
 
     people = relationship(
