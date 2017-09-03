@@ -9,6 +9,7 @@ from sqlalchemy.orm import aliased
 from falcon import HTTP_404
 from falcon import HTTP_401
 from falcon import HTTP_204
+from falcon import HTTP_500
 
 from nikoniko.entities import Session
 from nikoniko.entities import User, user_schema, users_schema
@@ -96,7 +97,7 @@ def password(
 
 
 @hug.get('/users/{user_id}', requires=token_key_authentication)
-def user(user_id: hug.types.number, response, user: hug.directives.user):
+def get_user(user_id: hug.types.number, response, user: hug.directives.user):
     '''Returns a user'''
     logger.debug('Authenticated user reported: {}'.format(user))
     try:
@@ -111,6 +112,12 @@ def user(user_id: hug.types.number, response, user: hug.directives.user):
         return None
     return user_schema.dump(res).data
 
+@hug.patch('/users/{user_id}', requires=token_key_authentication)
+def patch_user(user_patch, response, user: hug.directives.user):
+    '''Patches a user's data '''
+    logger.debug('User patch: {}'.format(user_patch))
+    response.status = HTTP_500
+    return None
 
 @hug.get('/people/{id}', requires=token_key_authentication)
 def person(id: hug.types.number, response, user: hug.directives.user):
