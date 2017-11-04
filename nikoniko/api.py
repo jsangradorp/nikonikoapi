@@ -115,12 +115,14 @@ def get_user(user_id: hug.types.number, response, user: hug.directives.user):
         return None
     return user_schema.dump(res).data
 
+
 @hug.patch('/users/{user_id}', requires=token_key_authentication)
 def patch_user(user_patch, response, user: hug.directives.user):
     '''Patches a user's data '''
     logger.debug('User patch: {}'.format(user_patch))
     response.status = HTTP_500
     return None
+
 
 @hug.get('/people/{id}', requires=token_key_authentication)
 def person(id: hug.types.number, response, user: hug.directives.user):
