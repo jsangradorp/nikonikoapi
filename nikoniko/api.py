@@ -28,14 +28,18 @@ api = hug.API(__name__)
 api.http.add_middleware(CORSMiddleware(api))
 
 
+def return_unauthorised(response, email):
+    response.status = HTTP_401
+    return 'Invalid email and/or password for email: {0}'.format(email)
+
+
 @hug.post('/login')
 def login(email: hug.types.text, password: hug.types.text, response):
     '''Authenticate and return a token'''
     try:
         user = session.query(User).filter_by(email=email).one()
     except:
-        response.status = HTTP_401
-        return 'Invalid email and/or password for email: {0}'.format(email)
+        return_unauthorised(response, email)
     if (bcrypt.checkpw(password.encode(), user.password_hash.encode())):
         created = datetime.datetime.now()
         return {
@@ -50,6 +54,8 @@ def login(email: hug.types.text, password: hug.types.text, response):
                 secret_key,
                 algorithm='HS256'
             )}
+    else:
+        return_unauthorised(response, email)
 
 
 def token_verify(token):
