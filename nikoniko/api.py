@@ -100,9 +100,10 @@ def password(
 
 
 @hug.get('/users/{user_id}', requires=token_key_authentication)
-def get_user(user_id: hug.types.number, response, user: hug.directives.user):
+def get_user(user_id: hug.types.number, response,
+             authenticated_user: hug.directives.user):
     '''Returns a user'''
-    logger.debug('Authenticated user reported: {}'.format(user))
+    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
     try:
         res = session.query(User).filter_by(user_id=user_id).one()
         boards = session.query(
@@ -117,15 +118,16 @@ def get_user(user_id: hug.types.number, response, user: hug.directives.user):
 
 
 @hug.patch('/users/{user_id}', requires=token_key_authentication)
-def patch_user(user_patch, response, user: hug.directives.user):
+def patch_user(user, response, authenticated_user: hug.directives.user):
     '''Patches a user's data '''
-    logger.debug('User patch: {}'.format(user_patch))
+    logger.debug('User patch: {}'.format(user))
     response.status = HTTP_500
     return None
 
 
 @hug.get('/people/{id}', requires=token_key_authentication)
-def person(id: hug.types.number, response, user: hug.directives.user):
+def person(id: hug.types.number, response,
+           authenticated_user: hug.directives.user):
     '''Returns a person'''
     try:
         res = session.query(Person).filter_by(id=id).one()
