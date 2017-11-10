@@ -8,3 +8,4 @@
 - Up coverage to >100%
 - Review security
 - Proper release procedure
+- Add catchall route and respond 404 (or)
