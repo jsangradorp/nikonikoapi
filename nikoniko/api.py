@@ -113,6 +113,7 @@ def get_user(user_id: hug.types.number, response,
                     Person.id == res.person_id).all()
         res.boards = boards
     except Exception as e:
+        logger.debug('User not found: {}'.format(e))
         response.status = HTTP_404
         return None
     return user_schema.dump(res).data
