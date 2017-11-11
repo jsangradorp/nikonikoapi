@@ -13,6 +13,7 @@ from falcon import HTTP_500
 
 from nikoniko.entities import Session
 from nikoniko.entities import User, user_schema, users_schema
+from nikoniko.entities import userprofile_schema, userprofiles_schema
 from nikoniko.entities import Person, person_schema, people_schema
 from nikoniko.entities import Board, board_schema, boards_schema
 from nikoniko.entities import ReportedFeeling, reportedfeeling_schema
@@ -119,10 +120,34 @@ def get_user(user_id: hug.types.number, response,
     return user_schema.dump(res).data
 
 
-@hug.patch('/users/{user_id}', requires=token_key_authentication)
-def patch_user(user, response, authenticated_user: hug.directives.user):
+@hug.get('/userProfiles/{user_id}', requires=token_key_authentication)
+def get_user_profile(
+        user_id: hug.types.number,
+        response,
+        authenticated_user: hug.directives.user):
+    '''Returns a user profile'''
+    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
+    try:
+        res = session.query(User).filter_by(user_id=user_id).one()
+    except Exception as e:
+        logger.error('User not found: {}'.format(e))
+        response.status = HTTP_404
+        return None
+    return userprofile_schema.dump(res).data
+
+
+@hug.patch('/userProfiles/{user_id}', requires=token_key_authentication)
+def patch_user_profile(
+        name: hug.types.text,
+        email: hug.types.text,
+        password: hug.types.text,
+        response, authenticated_user: hug.directives.user):
     '''Patches a user's data '''
-    logger.debug('User patch: {}'.format(user))
+    logger.debug(
+            'User profile patch: <<"{}", "{}", "{}">>'.format(
+                name,
+                email,
+                password))
     response.status = HTTP_500
     return None
 

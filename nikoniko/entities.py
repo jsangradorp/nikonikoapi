@@ -147,4 +147,13 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
+class UserProfileSchema(Schema):
+    user_id = fields.Int(dump_only=True)
+    name = fields.Str()
+    email = fields.Str()
+
+userprofile_schema = UserProfileSchema()
+userprofiles_schema = UserProfileSchema(many=True)
+
+
 Base.metadata.create_all(engine)
