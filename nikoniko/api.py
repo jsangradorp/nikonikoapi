@@ -79,7 +79,7 @@ def password(
         password: hug.types.text,
         response,
         authenticated_user: hug.directives.user):
-    '''Update a users' password '''
+    '''Updates a users' password '''
     try:
         found_user = session.query(User).filter_by(user_id=user_id).one()
     except:
