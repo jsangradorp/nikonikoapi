@@ -1,3 +1,4 @@
+- Mock the DB in tests
 - Backoffice
   - Generate and send reset-password link
   - Allow access with said
