@@ -8,6 +8,7 @@ import bcrypt
 from sqlalchemy.orm import aliased
 from falcon import HTTP_404
 from falcon import HTTP_401
+from falcon import HTTP_403
 from falcon import HTTP_204
 from falcon import HTTP_500
 
@@ -83,7 +84,14 @@ def password(
     '''Updates a users' password '''
     try:
         found_user = session.query(User).filter_by(user_id=user_id).one()
-    except:
+    except Exception as e:
+        logger.debug('User not found: {}'.format(e))
+        response.status = HTTP_404
+        return None
+    if user_id != authenticated_user['user']:
+        response.status = HTTP_401
+        return '''Authenticated user isn\'t allowed to update \
+                the password for requested user'''
         response.status = HTTP_404
         return None
     logger.debug(
@@ -138,18 +146,44 @@ def get_user_profile(
 
 @hug.patch('/userProfiles/{user_id}', requires=token_key_authentication)
 def patch_user_profile(
+        user_id: hug.types.number,
         name: hug.types.text,
         email: hug.types.text,
         password: hug.types.text,
-        response, authenticated_user: hug.directives.user):
+        response,
+        authenticated_user: hug.directives.user):
     '''Patches a user's data '''
     logger.debug(
             'User profile patch: <<"{}", "{}", "{}">>'.format(
                 name,
                 email,
                 password))
-    response.status = HTTP_500
-    return None
+    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
+    try:
+        found_user = session.query(User).filter_by(user_id=user_id).one()
+    except Exception as e:
+        logger.error('User not found: {}'.format(e))
+        response.status = HTTP_404
+        return None
+    if user_id != authenticated_user['user']:
+        response.status = HTTP_401
+        return '''Authenticated user isn\'t allowed to update \
+                the password for requested user'''
+    if name:
+        found_user.name = name
+    if email:
+        found_user.email = email
+    if password:
+        found_user.password_hash = bcrypt.hashpw(
+            password.encode(),
+            bcrypt.gensalt()).decode()
+    try:
+        session.add(found_user)
+        session.commit()
+        return
+    except Exception as e:
+        response.status = HTTP_403
+        return "User profile not updated"
 
 
 @hug.get('/people/{id}', requires=token_key_authentication)
