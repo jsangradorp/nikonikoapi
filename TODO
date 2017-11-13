@@ -1,3 +1,4 @@
+- Fix unit tests
 - Align spec with implementation
 - Mock the DB in tests
 - Backoffice
