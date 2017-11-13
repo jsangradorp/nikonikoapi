@@ -19,6 +19,7 @@ from nikoniko.entities import Person, person_schema, people_schema
 from nikoniko.entities import Board, board_schema, boards_schema
 from nikoniko.entities import ReportedFeeling, reportedfeeling_schema
 from nikoniko.entities import reportedfeelings_schema
+from nikoniko.entities import InvalidatedToken
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
@@ -64,10 +65,18 @@ def login(email: hug.types.text, password: hug.types.text, response):
 
 
 def token_verify(token):
+    logger.debug('Token: {}'.format(token))
     try:
-        return jwt.decode(token, secret_key, algorithm='HS256')
+        decoded_token = jwt.decode(token, secret_key, algorithm='HS256')
+        logger.debug('Decoded token: {}'.format(decoded_token))
     except jwt.DecodeError:
         return False
+    try:
+        invalid_token = session.query(
+                InvalidatedToken).filter_by(token=token).one()
+        return False
+    except:
+        return decoded_token
 
 
 token_key_authentication = \
@@ -79,6 +88,7 @@ token_key_authentication = \
 def password(
         user_id: hug.types.number,
         password: hug.types.text,
+        request,
         response,
         authenticated_user: hug.directives.user):
     '''Updates a users' password '''
@@ -105,6 +115,10 @@ def password(
         password.encode(),
         bcrypt.gensalt()).decode()
     session.add(found_user)
+    invalidated_token = InvalidatedToken(
+            token=request.headers['AUTHORIZATION'],
+            timestamp_invalidated=datetime.datetime.now())
+    session.add(invalidated_token)
     session.commit()
     response.status = HTTP_204
 
@@ -150,6 +164,7 @@ def patch_user_profile(
         name: hug.types.text,
         email: hug.types.text,
         password: hug.types.text,
+        request,
         response,
         authenticated_user: hug.directives.user):
     '''Patches a user's data '''
@@ -159,6 +174,7 @@ def patch_user_profile(
                 email,
                 password))
     logger.debug('Authenticated user reported: {}'.format(authenticated_user))
+    logger.debug('Token: {}'.format(request.headers['AUTHORIZATION']))
     try:
         found_user = session.query(User).filter_by(user_id=user_id).one()
     except Exception as e:
@@ -177,8 +193,12 @@ def patch_user_profile(
         found_user.password_hash = bcrypt.hashpw(
             password.encode(),
             bcrypt.gensalt()).decode()
-    try:
         session.add(found_user)
+        invalidated_token = InvalidatedToken(
+                token=request.headers['AUTHORIZATION'],
+                timestamp_invalidated=datetime.datetime.now())
+        session.add(invalidated_token)
+    try:
         session.commit()
         return
     except Exception as e:

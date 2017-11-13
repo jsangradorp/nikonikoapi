@@ -1,6 +1,7 @@
 import os
 import logging
-from sqlalchemy import Column, Integer, String, Date, Sequence
+import re
+from sqlalchemy import Column, Integer, String, Date, DateTime, Sequence
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
 from sqlalchemy import create_engine
@@ -31,12 +32,26 @@ db_connstring = '{}://{}{}{}{}:{}/{}'.format(
 # engine = create_engine(
 #     'postgresql://nikoniko:awesomepassword@localhost:5432/nikoniko',
 #     echo=False)
-logger.debug('db_connstring: [{}]'.format(db_connstring))
+logger.debug(
+        'db_connstring: [{}]'.format(
+            re.sub(
+                r'(:.+?):.*?@',
+                r'\1:XXXXXXX@',
+                db_connstring)))
 engine = create_engine(
     db_connstring,
     echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
+
+
+class InvalidatedToken(Base):
+    __tablename__ = 'invalidatedtokens'
+    token = Column(String(180), primary_key=True)
+    timestamp_invalidated = Column(
+            DateTime(timezone=True),
+            nullable=False,
+            index=True)
 
 
 class User(Base):
