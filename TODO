@@ -1,3 +1,4 @@
+- Align spec with implementation
 - Mock the DB in tests
 - Backoffice
   - Generate and send reset-password link
