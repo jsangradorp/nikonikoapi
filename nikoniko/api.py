@@ -209,7 +209,7 @@ def patch_user_profile(  # pylint: disable=too-many-arguments
         return "User profile not updated"
 
 
-@hug.get('/people/{personId}', requires=TOKEN_KEY_AUTHENTICATION)
+@hug.get('/people/{person_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_person(person_id: hug.types.number, response):
     '''Returns a person'''
     try:
@@ -227,7 +227,7 @@ def people():
     return PEOPLE_SCHEMA.dump(res).data
 
 
-@hug.get('/boards/{boardId}', requires=TOKEN_KEY_AUTHENTICATION)
+@hug.get('/boards/{board_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def board(board_id: hug.types.number, response):
     '''Returns a board'''
     try:
@@ -236,7 +236,7 @@ def board(board_id: hug.types.number, response):
             reportedfeelings = SESSION.query(
                 ReportedFeeling).filter(
                     ReportedFeeling.board_id == board_id).filter(
-                        ReportedFeeling.person_id == person.id).all()
+                        ReportedFeeling.person_id == person.person_id).all()
             person.reportedfeelings = reportedfeelings
     except NoResultFound:
         response.status = HTTP_404

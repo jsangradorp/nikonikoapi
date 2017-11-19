@@ -63,15 +63,18 @@ class User(BASE):  # pylint: disable=too-few-public-methods
     name = Column(String(50))
     email = Column(String(50), nullable=False, index=True, unique=True)
     password_hash = Column(String(60))
-    person_id = Column(Integer, ForeignKey('people.id'))
+    person_id = Column(Integer, ForeignKey('people.person_id'))
     person = relationship('Person', back_populates='user')
 
 
 class ReportedFeeling(BASE):  # pylint: disable=too-few-public-methods
     ''' Reported Feeling entity definition '''
     __tablename__ = 'reportedfeelings'
-    person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
-    board_id = Column(Integer, ForeignKey('boards.id'), primary_key=True)
+    person_id = Column(
+        Integer,
+        ForeignKey('people.person_id'),
+        primary_key=True)
+    board_id = Column(Integer, ForeignKey('boards.board_id'), primary_key=True)
     date = Column(Date, primary_key=True)
     feeling = Column(String(10))
 
@@ -95,10 +98,10 @@ MEMBERSHIP = \
         'membership',
         BASE.metadata,
         Column('person_id',
-               ForeignKey('people.id'),
+               ForeignKey('people.person_id'),
                primary_key=True),
         Column('board_id',
-               ForeignKey('boards.id'),
+               ForeignKey('boards.board_id'),
                primary_key=True))
 
 

@@ -27,7 +27,7 @@ TOKEN = jwt.encode(
     },
     SECRET_KEY,
     algorithm='HS256'
-)
+).decode()
 
 
 def delete_db_tables():

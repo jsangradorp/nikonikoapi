@@ -41,7 +41,11 @@ class CORSMiddleware(object):
 
         return reqpath
 
-    def process_response(self, request, response):
+    def process_response(
+            self,
+            request,
+            response,
+            resource):  # pylint: disable=unused-argument
         """Add CORS headers to the response"""
         response.set_header(
             'Access-Control-Allow-Origin',
