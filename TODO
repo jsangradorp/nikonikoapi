@@ -1,6 +1,8 @@
-- Fix unit tests
-- Align spec with implementation
 - Mock the DB in tests
+- Fix unit tests
+- Proper release procedure
+- Align spec with implementation
+- Implement confirmation of email change
 - Backoffice
   - Generate and send reset-password link
   - Allow access with said
@@ -10,5 +12,4 @@
 - Review and account for wrong input and other corner cases. Proper error management
 - Up coverage to >100%
 - Review security
-- Proper release procedure
 - Add catchall route and respond 404 (or)
