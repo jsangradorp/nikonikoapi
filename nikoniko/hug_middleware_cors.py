@@ -1,4 +1,4 @@
-from typing import Sequence
+''' Add a middleware to allow cross-origin request sharing '''
 import re
 
 
@@ -13,9 +13,12 @@ class CORSMiddleware(object):
     def __init__(
             self,
             api,
-            allow_origins: list=['*'],
-            allow_credentials: bool=True,
-            max_age: int=None):
+            allow_origins: list = None,
+            allow_credentials: bool = True,
+            max_age: int = None):
+        ''' Initialize the middleware '''
+        if allow_origins is None:
+            allow_origins = ['*']
         self.api = api
         self.allow_origins = allow_origins
         self.allow_credentials = allow_credentials
@@ -38,7 +41,7 @@ class CORSMiddleware(object):
 
         return reqpath
 
-    def process_response(self, request, response, resource):
+    def process_response(self, request, response):
         """Add CORS headers to the response"""
         response.set_header(
             'Access-Control-Allow-Origin',

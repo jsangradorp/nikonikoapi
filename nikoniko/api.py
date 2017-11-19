@@ -1,3 +1,6 @@
+"""
+Provide an API to manage happiness logs (nikoniko) for teams
+"""
 import logging
 import datetime
 
@@ -5,87 +8,88 @@ import os
 import hug
 import jwt
 import bcrypt
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import InvalidRequestError
 from falcon import HTTP_404
 from falcon import HTTP_401
 from falcon import HTTP_403
 from falcon import HTTP_204
-from falcon import HTTP_500
 
-from nikoniko.entities import Session
-from nikoniko.entities import User, user_schema, users_schema
-from nikoniko.entities import userprofile_schema, userprofiles_schema
-from nikoniko.entities import Person, person_schema, people_schema
-from nikoniko.entities import Board, board_schema, boards_schema
-from nikoniko.entities import ReportedFeeling, reportedfeeling_schema
-from nikoniko.entities import reportedfeelings_schema
+from nikoniko.entities import SESSION
+from nikoniko.entities import User, USER_SCHEMA
+from nikoniko.entities import USERPROFILE_SCHEMA
+from nikoniko.entities import Person, PERSON_SCHEMA, PEOPLE_SCHEMA
+from nikoniko.entities import Board, BOARD_SCHEMA, BOARDS_SCHEMA
+from nikoniko.entities import ReportedFeeling, REPORTEDFEELING_SCHEMA
 from nikoniko.entities import InvalidatedToken
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-session = Session()
+LOGGER = logging.getLogger(__name__)
+SESSION = SESSION()
 
-secret_key = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
+SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
-api = hug.API(__name__)
-api.http.add_middleware(CORSMiddleware(api))
+API = hug.API(__name__)
+API.http.add_middleware(CORSMiddleware(API))
 
 
 def return_unauthorised(response, email, exception=None):
+    ''' Update the response to mean unauthorised access '''
     response.status = HTTP_401
     return 'Invalid email and/or password for email: {} [{}]'.format(
-            email, exception)
+        email, exception)
 
 
 @hug.post('/login')
 def login(email: hug.types.text, password: hug.types.text, response):
     '''Authenticate and return a token'''
     try:
-        user = session.query(User).filter_by(email=email).one()
-    except Exception as e:
-        return return_unauthorised(response, email, e)
-    if (bcrypt.checkpw(password.encode(), user.password_hash.encode())):
-        created = datetime.datetime.now()
-        return {
-            'user': user.user_id,
-            'person': user.person_id,
-            'token': jwt.encode(
-                {
-                    'user': user.user_id,
-                    'created': created.isoformat(),
-                    'exp': (created + datetime.timedelta(days=1)).timestamp()
-                },
-                secret_key,
-                algorithm='HS256'
-            )}
-    else:
+        user = SESSION.query(User).filter_by(email=email).one()
+        if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+            created = datetime.datetime.now()
+            return {
+                'user': user.user_id,
+                'person': user.person_id,
+                'token': jwt.encode(
+                    {
+                        'user': user.user_id,
+                        'created': created.isoformat(),
+                        'exp':
+                            (created + datetime.timedelta(days=1)).timestamp()
+                    },
+                    SECRET_KEY,
+                    algorithm='HS256'
+                )}
         return return_unauthorised(response, email)
+    except NoResultFound as exception:
+        return return_unauthorised(response, email, exception)
 
 
 def token_verify(token):
-    logger.debug('Token: {}'.format(token))
+    ''' hug authentication token verification function '''
+    LOGGER.debug('Token: %s', token)
     try:
-        decoded_token = jwt.decode(token, secret_key, algorithm='HS256')
-        logger.debug('Decoded token: {}'.format(decoded_token))
+        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+        LOGGER.debug('Decoded token: %s', decoded_token)
     except jwt.DecodeError:
         return False
     try:
-        invalid_token = session.query(
-                InvalidatedToken).filter_by(token=token).one()
+        SESSION.query(
+            InvalidatedToken).filter_by(token=token).one()
         return False
-    except:
+    except NoResultFound:
         return decoded_token
 
 
-token_key_authentication = \
+TOKEN_KEY_AUTHENTICATION = \
     hug.authentication.token(  # pylint: disable=no-value-for-parameter
         token_verify)
 
 
-@hug.put('/password/{user_id}', requires=token_key_authentication)
-def password(
+@hug.put('/password/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
+def update_password(
         user_id: hug.types.number,
         password: hug.types.text,
         request,
@@ -93,73 +97,72 @@ def password(
         authenticated_user: hug.directives.user):
     '''Updates a users' password '''
     try:
-        found_user = session.query(User).filter_by(user_id=user_id).one()
-    except Exception as e:
-        logger.debug('User not found: {}'.format(e))
+        found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+    except NoResultFound as exception:
+        LOGGER.debug('User not found: %s', exception)
         response.status = HTTP_404
         return None
     if user_id != authenticated_user['user']:
         response.status = HTTP_401
         return '''Authenticated user isn\'t allowed to update \
                 the password for requested user'''
-        response.status = HTTP_404
-        return None
-    logger.debug(
-            'user_id: {}, authenticated_user: {}'.format(
-                user_id, authenticated_user))
+    LOGGER.debug(
+        'user_id: %s, authenticated_user: %s',
+        user_id,
+        authenticated_user)
     if user_id != authenticated_user['user']:
         response.status = HTTP_401
         return '''Authenticated user isn\'t allowed to update \
-                the password for requested user'''
+            the password for requested user'''
     found_user.password_hash = bcrypt.hashpw(
         password.encode(),
         bcrypt.gensalt()).decode()
-    session.add(found_user)
+    SESSION.add(found_user)
     invalidated_token = InvalidatedToken(
-            token=request.headers['AUTHORIZATION'],
-            timestamp_invalidated=datetime.datetime.now())
-    session.add(invalidated_token)
-    session.commit()
+        token=request.headers['AUTHORIZATION'],
+        timestamp_invalidated=datetime.datetime.now())
+    SESSION.add(invalidated_token)
+    SESSION.commit()
     response.status = HTTP_204
 
 
-@hug.get('/users/{user_id}', requires=token_key_authentication)
+@hug.get('/users/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_user(user_id: hug.types.number, response,
              authenticated_user: hug.directives.user):
     '''Returns a user'''
-    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
+    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
     try:
-        res = session.query(User).filter_by(user_id=user_id).one()
-        boards = session.query(
+        res = SESSION.query(User).filter_by(user_id=user_id).one()
+        boards = SESSION.query(
             Board).join(
                 Person.boards).filter(
-                    Person.id == res.person_id).all()
+                    Person.person_id == res.person_id).all()
         res.boards = boards
-    except Exception as e:
-        logger.debug('User not found: {}'.format(e))
+    except NoResultFound as exception:
+        LOGGER.debug('User not found: %s', exception)
         response.status = HTTP_404
         return None
-    return user_schema.dump(res).data
+    return USER_SCHEMA.dump(res).data
 
 
-@hug.get('/userProfiles/{user_id}', requires=token_key_authentication)
+@hug.get('/userProfiles/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_user_profile(
         user_id: hug.types.number,
         response,
         authenticated_user: hug.directives.user):
     '''Returns a user profile'''
-    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
+    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
     try:
-        res = session.query(User).filter_by(user_id=user_id).one()
-    except Exception as e:
-        logger.error('User not found: {}'.format(e))
+        res = SESSION.query(User).filter_by(user_id=user_id).one()
+    except NoResultFound as exception:
+        LOGGER.error('User not found: %s', exception)
         response.status = HTTP_404
         return None
-    return userprofile_schema.dump(res).data
+    return USERPROFILE_SCHEMA.dump(res).data
 
 
-@hug.patch('/userProfiles/{user_id}', requires=token_key_authentication)
-def patch_user_profile(
+@hug.patch('/userProfiles/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
+def patch_user_profile(  # pylint: disable=too-many-arguments
         user_id: hug.types.number,
         name: hug.types.text,
         email: hug.types.text,
@@ -168,17 +171,17 @@ def patch_user_profile(
         response,
         authenticated_user: hug.directives.user):
     '''Patches a user's data '''
-    logger.debug(
-            'User profile patch: <<"{}", "{}", "{}">>'.format(
-                name,
-                email,
-                password))
-    logger.debug('Authenticated user reported: {}'.format(authenticated_user))
-    logger.debug('Token: {}'.format(request.headers['AUTHORIZATION']))
+    LOGGER.debug(
+        'User profile patch: <<"%s", "%s", "%s">>',
+        name,
+        email,
+        password)
+    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+    LOGGER.debug('Token: %s', request.headers['AUTHORIZATION'])
     try:
-        found_user = session.query(User).filter_by(user_id=user_id).one()
-    except Exception as e:
-        logger.error('User not found: {}'.format(e))
+        found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+    except NoResultFound as exception:
+        LOGGER.error('User not found: %s', exception)
         response.status = HTTP_404
         return None
     if user_id != authenticated_user['user']:
@@ -193,120 +196,120 @@ def patch_user_profile(
         found_user.password_hash = bcrypt.hashpw(
             password.encode(),
             bcrypt.gensalt()).decode()
-        session.add(found_user)
+        SESSION.add(found_user)
         invalidated_token = InvalidatedToken(
-                token=request.headers['AUTHORIZATION'],
-                timestamp_invalidated=datetime.datetime.now())
-        session.add(invalidated_token)
+            token=request.headers['AUTHORIZATION'],
+            timestamp_invalidated=datetime.datetime.now())
+        SESSION.add(invalidated_token)
     try:
-        session.commit()
+        SESSION.commit()
         return
-    except Exception as e:
+    except InvalidRequestError:
         response.status = HTTP_403
         return "User profile not updated"
 
 
-@hug.get('/people/{id}', requires=token_key_authentication)
-def person(id: hug.types.number, response,
-           authenticated_user: hug.directives.user):
+@hug.get('/people/{personId}', requires=TOKEN_KEY_AUTHENTICATION)
+def get_person(person_id: hug.types.number, response):
     '''Returns a person'''
     try:
-        res = session.query(Person).filter_by(id=id).one()
-    except:
+        res = SESSION.query(Person).filter_by(person_id=person_id).one()
+    except NoResultFound:
         response.status = HTTP_404
         return None
-    return person_schema.dump(res).data
+    return PERSON_SCHEMA.dump(res).data
 
 
-@hug.get('/people', requires=token_key_authentication)
+@hug.get('/people', requires=TOKEN_KEY_AUTHENTICATION)
 def people():
     '''Returns all the people'''
-    res = session.query(Person).all()
-    return people_schema.dump(res).data
+    res = SESSION.query(Person).all()
+    return PEOPLE_SCHEMA.dump(res).data
 
 
-@hug.get('/boards/{id}', requires=token_key_authentication)
-def board(id: hug.types.number, response):
+@hug.get('/boards/{boardId}', requires=TOKEN_KEY_AUTHENTICATION)
+def board(board_id: hug.types.number, response):
     '''Returns a board'''
     try:
-        res = session.query(Board).filter_by(id=id).one()
+        res = SESSION.query(Board).filter_by(board_id=board_id).one()
         for person in res.people:
-            reportedfeelings = session.query(
+            reportedfeelings = SESSION.query(
                 ReportedFeeling).filter(
-                    ReportedFeeling.board_id == id).filter(
+                    ReportedFeeling.board_id == board_id).filter(
                         ReportedFeeling.person_id == person.id).all()
             person.reportedfeelings = reportedfeelings
-    except:
+    except NoResultFound:
         response.status = HTTP_404
         return None
-    return board_schema.dump(res).data
+    return BOARD_SCHEMA.dump(res).data
 
 
-@hug.get('/boards', requires=token_key_authentication)
-def boards():
+@hug.get('/boards', requires=TOKEN_KEY_AUTHENTICATION)
+def get_boards():
     '''Returns all boards'''
-    res = session.query(Board).all()
-    return boards_schema.dump(res).data
+    res = SESSION.query(Board).all()
+    return BOARDS_SCHEMA.dump(res).data
 
 
 @hug.get(
     '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    requires=token_key_authentication)
-def get_reportedFeeling(
+    requires=TOKEN_KEY_AUTHENTICATION)
+def get_reported_feeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
         date: hug.types.text,
         response):
     '''Returns a specific reported feeling for a board, person and date'''
     try:
-        res = session.query(ReportedFeeling).filter_by(
+        res = SESSION.query(ReportedFeeling).filter_by(
             board_id=board_id,
             person_id=person_id,
             date=date).one()
-    except:
+    except NoResultFound:
         response.status = HTTP_404
         return None
-    return reportedfeeling_schema.dump(res).data
+    return REPORTEDFEELING_SCHEMA.dump(res).data
 
 
 @hug.post(
     '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    requires=token_key_authentication)
-def create_reportedFeeling(
+    requires=TOKEN_KEY_AUTHENTICATION)
+def create_reported_feeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
         feeling: hug.types.text,
         date: hug.types.text):
-    '''Creates a new reportedFeeling'''
+    '''Creates a new reported_feeling'''
     try:
-        reportedFeeling = session.query(ReportedFeeling).filter_by(
+        reported_feeling = SESSION.query(ReportedFeeling).filter_by(
             board_id=board_id,
             person_id=person_id,
             date=date).one()
-        reportedFeeling.feeling = feeling
-    except:
-        reportedFeeling = ReportedFeeling(
+        reported_feeling.feeling = feeling
+    except NoResultFound:
+        reported_feeling = ReportedFeeling(
             person_id=person_id,
             board_id=board_id,
             date=datetime.datetime.strptime(
                 date,
                 "%Y-%m-%d").date(),
             feeling=feeling)
-        session.add(reportedFeeling)
-    session.commit()
-    return reportedfeeling_schema.dump(reportedFeeling).data
+        SESSION.add(reported_feeling)
+    SESSION.commit()
+    return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
 
 def bootstrap_db():
-    one_person = Person(id=1, label='Ann')
-    other_person = Person(id=2, label='John')
-    session.add(one_person)
-    session.add(other_person)
+    ''' Fill in the DB with initial data '''
+    one_person = Person(person_id=1, label='Ann')
+    other_person = Person(person_id=2, label='John')
+    SESSION.add(one_person)
+    SESSION.add(other_person)
     try:
-        session.commit()
-    except Exception as e:
-        print(e)
-        session.rollback()
+        SESSION.commit()
+    except InvalidRequestError as exception:
+        print(exception)
+        SESSION.rollback()
     one_user = User(
         user_id=1,
         name='John Smith',
@@ -315,32 +318,32 @@ def bootstrap_db():
         password_hash=bcrypt.hashpw(
             'whocares'.encode(),
             bcrypt.gensalt()).decode())
-    session.add(one_user)
+    SESSION.add(one_user)
     try:
-        session.commit()
-    except Exception as e:
-        print(e)
-        session.rollback()
-    one_board = Board(id=1, label='Global board')
+        SESSION.commit()
+    except InvalidRequestError as exception:
+        print(exception)
+        SESSION.rollback()
+    one_board = Board(board_id=1, label='Global board')
     one_board.people.append(one_person)
     one_board.people.append(other_person)
-    session.add(one_board)
-    another_board = Board(id=2, label='The A Team')
+    SESSION.add(one_board)
+    another_board = Board(board_id=2, label='The A Team')
     another_board.people.append(one_person)
     another_board.people.append(other_person)
-    session.add(another_board)
-    and_a_third__board = Board(id=3, label='The Harlem Globetrotters')
+    SESSION.add(another_board)
+    and_a_third__board = Board(board_id=3, label='The Harlem Globetrotters')
     and_a_third__board.people.append(one_person)
     and_a_third__board.people.append(other_person)
-    session.add(and_a_third__board)
+    SESSION.add(and_a_third__board)
     try:
-        session.commit()
-    except Exception as e:
-        print(e)
-        session.rollback()
+        SESSION.commit()
+    except InvalidRequestError as exception:
+        print(exception)
+        SESSION.rollback()
 
 
 if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
         'yes', 'y', 'true', 't', '1']:
-    logger.info('Bootstrapping DB')
+    LOGGER.info('Bootstrapping DB')
     bootstrap_db()

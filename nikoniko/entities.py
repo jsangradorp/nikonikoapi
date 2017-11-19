@@ -1,7 +1,8 @@
+''' Definition of ORM objects for the Nikoniko boards API '''
 import os
 import logging
 import re
-from sqlalchemy import Column, Integer, String, Date, DateTime, Sequence
+from sqlalchemy import Column, Integer, String, Date, DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
 from sqlalchemy import create_engine
@@ -12,49 +13,51 @@ from sqlalchemy.orm import sessionmaker
 from marshmallow import Schema, fields
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-db_driver = os.getenv('DB_DRIVER', 'postgresql')
-db_host = os.getenv('DB_HOST', 'localhost')
-db_port = os.getenv('DB_PORT', '5432')
-db_dbname = os.getenv('DB_DBNAME', 'nikoniko')
-db_username = os.getenv('DB_USERNAME', os.getenv('USER', None))
-db_password = os.getenv('DB_PASSWORD', None)
-db_connstring = '{}://{}{}{}{}:{}/{}'.format(
-        db_driver,
-        db_username if db_username else '',
-        ':{}'.format(db_password) if db_password else '',
-        '@' if db_username else '',
-        db_host,
-        db_port,
-        db_dbname)
-# engine = create_engine('sqlite:///:memory:', echo=False)
-# engine = create_engine(
+DB_DRIVER = os.getenv('DB_DRIVER', 'postgresql')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_DBNAME = os.getenv('DB_DBNAME', 'nikoniko')
+DB_USERNAME = os.getenv('DB_USERNAME', os.getenv('USER', None))
+DB_PASSWORD = os.getenv('DB_PASSWORD', None)
+DB_CONNSTRING = '{}://{}{}{}{}:{}/{}'.format(
+    DB_DRIVER,
+    DB_USERNAME if DB_USERNAME else '',
+    ':{}'.format(DB_PASSWORD) if DB_PASSWORD else '',
+    '@' if DB_USERNAME else '',
+    DB_HOST,
+    DB_PORT,
+    DB_DBNAME)
+# ENGINE = create_engine('sqlite:///:memory:', echo=False)
+# ENGINE = create_engine(
 #     'postgresql://nikoniko:awesomepassword@localhost:5432/nikoniko',
 #     echo=False)
-logger.debug(
-        'db_connstring: [{}]'.format(
-            re.sub(
-                r'(:.+?):.*?@',
-                r'\1:XXXXXXX@',
-                db_connstring)))
-engine = create_engine(
-    db_connstring,
+LOGGER.debug(
+    'db_connstring: [%s]',
+    re.sub(
+        r'(:.+?):.*?@',
+        r'\1:XXXXXXX@',
+        DB_CONNSTRING))
+ENGINE = create_engine(
+    DB_CONNSTRING,
     echo=False)
-Base = declarative_base()
-Session = sessionmaker(bind=engine)
+BASE = declarative_base()
+SESSION = sessionmaker(bind=ENGINE)
 
 
-class InvalidatedToken(Base):
+class InvalidatedToken(BASE):  # pylint: disable=too-few-public-methods
+    ''' Invalidated Token entity definition '''
     __tablename__ = 'invalidatedtokens'
     token = Column(String(180), primary_key=True)
     timestamp_invalidated = Column(
-            DateTime(timezone=True),
-            nullable=False,
-            index=True)
+        DateTime(timezone=True),
+        nullable=False,
+        index=True)
 
 
-class User(Base):
+class User(BASE):  # pylint: disable=too-few-public-methods
+    ''' User entity definition '''
     __tablename__ = 'users'
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
@@ -64,7 +67,8 @@ class User(Base):
     person = relationship('Person', back_populates='user')
 
 
-class ReportedFeeling(Base):
+class ReportedFeeling(BASE):  # pylint: disable=too-few-public-methods
+    ''' Reported Feeling entity definition '''
     __tablename__ = 'reportedfeelings'
     person_id = Column(Integer, ForeignKey('people.id'), primary_key=True)
     board_id = Column(Integer, ForeignKey('boards.id'), primary_key=True)
@@ -75,20 +79,21 @@ class ReportedFeeling(Base):
     board = relationship('Board', back_populates='reported_feelings')
 
 
-class ReportedFeelingSchema(Schema):
+class ReportedFeelingSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' Reported Feeling schema definition '''
     person_id = fields.Int(dump_only=True)
     board_id = fields.Int(dump_only=True)
     date = fields.Date()
     feeling = fields.Str()
 
-reportedfeeling_schema = ReportedFeelingSchema()
-reportedfeelings_schema = ReportedFeelingSchema(many=True)
+REPORTEDFEELING_SCHEMA = ReportedFeelingSchema()
+REPORTEDFEELINGS_SCHEMA = ReportedFeelingSchema(many=True)
 
 
-membership = \
+MEMBERSHIP = \
     Table(
         'membership',
-        Base.metadata,
+        BASE.metadata,
         Column('person_id',
                ForeignKey('people.id'),
                primary_key=True),
@@ -97,78 +102,86 @@ membership = \
                primary_key=True))
 
 
-class Person(Base):
+class Person(BASE):  # pylint: disable=too-few-public-methods
+    ''' Person entity definition '''
     __tablename__ = 'people'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    person_id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
 
     boards = relationship(
         'Board',
-        secondary=membership,
+        secondary=MEMBERSHIP,
         back_populates='people')
     reported_feelings = relationship('ReportedFeeling')
 
     user = relationship('User', back_populates='person', uselist=False)
 
 
-class PersonSchema(Schema):
-    id = fields.Int(dump_only=True)
+class PersonSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' Person schema definition '''
+    person_id = fields.Int(dump_only=True)
     label = fields.Str()
 
-person_schema = PersonSchema()
-people_schema = PersonSchema(many=True)
+PERSON_SCHEMA = PersonSchema()
+PEOPLE_SCHEMA = PersonSchema(many=True)
 
 
-class PersonInBoardSchema(Schema):
-    id = fields.Int(dump_only=True)
+class PersonInBoardSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' Person in board schema definition '''
+    person_id = fields.Int(dump_only=True)
     label = fields.Str()
     reportedfeelings = fields.Nested(ReportedFeelingSchema, many=True)
 
 
-class Board(Base):
+class Board(BASE):  # pylint: disable=too-few-public-methods
+    ''' Board entity definition '''
     __tablename__ = 'boards'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    board_id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
 
     people = relationship(
         'Person',
-        secondary=membership,
+        secondary=MEMBERSHIP,
         back_populates='boards')
     reported_feelings = relationship('ReportedFeeling')
 
 
-class BoardSchema(Schema):
-    id = fields.Int(dump_only=True)
+class BoardSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' Board schema definition '''
+    board_id = fields.Int(dump_only=True)
     label = fields.Str()
     people = fields.Nested(PersonInBoardSchema, many=True)
 
-board_schema = BoardSchema()
-boards_schema = BoardSchema(many=True)
+BOARD_SCHEMA = BoardSchema()
+BOARDS_SCHEMA = BoardSchema(many=True)
 
 
-class BoardInListSchema(Schema):
-    id = fields.Int(dump_only=True)
+class BoardInListSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' Board in list schema definition '''
+    board_id = fields.Int(dump_only=True)
     label = fields.Str()
 
 
-class UserSchema(Schema):
+class UserSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' User schema definition '''
     user_id = fields.Int(dump_only=True)
     name = fields.Str()
     email = fields.Str()
     person = fields.Nested(PersonSchema)
     boards = fields.Nested(BoardInListSchema, many=True)
 
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
+USER_SCHEMA = UserSchema()
+USERS_SCHEMA = UserSchema(many=True)
 
 
-class UserProfileSchema(Schema):
+class UserProfileSchema(Schema):  # pylint: disable=too-few-public-methods
+    ''' User profile schema definition '''
     user_id = fields.Int(dump_only=True)
     name = fields.Str()
     email = fields.Str()
 
-userprofile_schema = UserProfileSchema()
-userprofiles_schema = UserProfileSchema(many=True)
+USERPROFILE_SCHEMA = UserProfileSchema()
+USERPROFILES_SCHEMA = UserProfileSchema(many=True)
 
 
-Base.metadata.create_all(engine)
+BASE.metadata.create_all(ENGINE)
