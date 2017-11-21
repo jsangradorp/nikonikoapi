@@ -5,8 +5,8 @@ import os
 import hug
 import jwt
 
-from nikoniko.entities import ENGINE, SESSION, Person, Board, \
-        ReportedFeeling, User, MEMBERSHIP
+from nikoniko.entities import DB, Person, \
+        Board, ReportedFeeling, User, MEMBERSHIP
 import nikoniko.api
 
 from falcon import HTTP_404
@@ -15,7 +15,10 @@ from .context import nikoniko
 
 
 LOGGER = logging.getLogger(__name__)
-SESSION = SESSION()
+TESTDB = DB('sqlite:///:memory:', echo=False)
+TESTDB.create_all()
+SESSION = TESTDB.session()
+ENGINE = TESTDB.engine
 
 
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception

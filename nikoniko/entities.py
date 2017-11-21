@@ -1,7 +1,5 @@
 ''' Definition of ORM objects for the Nikoniko boards API '''
-import os
 import logging
-import re
 from sqlalchemy import Column, Integer, String, Date, DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
@@ -15,38 +13,28 @@ from marshmallow import Schema, fields
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
 
-DB_DRIVER = os.getenv('DB_DRIVER', 'postgresql')
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_DBNAME = os.getenv('DB_DBNAME', 'nikoniko')
-DB_USERNAME = os.getenv('DB_USERNAME', os.getenv('USER', None))
-DB_PASSWORD = os.getenv('DB_PASSWORD', None)
-DB_CONNSTRING = '{}://{}{}{}{}:{}/{}'.format(
-    DB_DRIVER,
-    DB_USERNAME if DB_USERNAME else '',
-    ':{}'.format(DB_PASSWORD) if DB_PASSWORD else '',
-    '@' if DB_USERNAME else '',
-    DB_HOST,
-    DB_PORT,
-    DB_DBNAME)
-# ENGINE = create_engine('sqlite:///:memory:', echo=False)
-# ENGINE = create_engine(
-#     'postgresql://nikoniko:awesomepassword@localhost:5432/nikoniko',
-#     echo=False)
-LOGGER.debug(
-    'db_connstring: [%s]',
-    re.sub(
-        r'(:.+?):.*?@',
-        r'\1:XXXXXXX@',
-        DB_CONNSTRING))
-ENGINE = create_engine(
-    DB_CONNSTRING,
-    echo=False)
-BASE = declarative_base()
-SESSION = sessionmaker(bind=ENGINE)
+
+class DB:
+    ''' DB / SQLAlchemy '''
+    base = declarative_base()
+
+    def __init__(self, db_connstring, echo=False):
+        self.db_connstring = db_connstring
+        self.engine = create_engine(
+            db_connstring,
+            echo=echo)
+        self.session = sessionmaker(bind=self.engine)
+
+    def create_all(self):
+        ''' create tables in DB '''
+        self.base.metadata.create_all(self.engine)
+
+    def dummy(self):
+        ''' dummy method '''
+        pass
 
 
-class InvalidatedToken(BASE):  # pylint: disable=too-few-public-methods
+class InvalidatedToken(DB.base):  # pylint: disable=too-few-public-methods
     ''' Invalidated Token entity definition '''
     __tablename__ = 'invalidatedtokens'
     token = Column(String(180), primary_key=True)
@@ -56,7 +44,7 @@ class InvalidatedToken(BASE):  # pylint: disable=too-few-public-methods
         index=True)
 
 
-class User(BASE):  # pylint: disable=too-few-public-methods
+class User(DB.base):  # pylint: disable=too-few-public-methods
     ''' User entity definition '''
     __tablename__ = 'users'
     user_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -67,7 +55,7 @@ class User(BASE):  # pylint: disable=too-few-public-methods
     person = relationship('Person', back_populates='user')
 
 
-class ReportedFeeling(BASE):  # pylint: disable=too-few-public-methods
+class ReportedFeeling(DB.base):  # pylint: disable=too-few-public-methods
     ''' Reported Feeling entity definition '''
     __tablename__ = 'reportedfeelings'
     person_id = Column(
@@ -96,7 +84,7 @@ REPORTEDFEELINGS_SCHEMA = ReportedFeelingSchema(many=True)
 MEMBERSHIP = \
     Table(
         'membership',
-        BASE.metadata,
+        DB.base.metadata,
         Column('person_id',
                ForeignKey('people.person_id'),
                primary_key=True),
@@ -105,7 +93,7 @@ MEMBERSHIP = \
                primary_key=True))
 
 
-class Person(BASE):  # pylint: disable=too-few-public-methods
+class Person(DB.base):  # pylint: disable=too-few-public-methods
     ''' Person entity definition '''
     __tablename__ = 'people'
     person_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -136,7 +124,7 @@ class PersonInBoardSchema(Schema):  # pylint: disable=too-few-public-methods
     reportedfeelings = fields.Nested(ReportedFeelingSchema, many=True)
 
 
-class Board(BASE):  # pylint: disable=too-few-public-methods
+class Board(DB.base):  # pylint: disable=too-few-public-methods
     ''' Board entity definition '''
     __tablename__ = 'boards'
     board_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -185,6 +173,3 @@ class UserProfileSchema(Schema):  # pylint: disable=too-few-public-methods
 
 USERPROFILE_SCHEMA = UserProfileSchema()
 USERPROFILES_SCHEMA = UserProfileSchema(many=True)
-
-
-BASE.metadata.create_all(ENGINE)

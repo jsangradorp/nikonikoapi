@@ -5,6 +5,7 @@ import logging
 import datetime
 
 import os
+import re
 import hug
 import jwt
 import bcrypt
@@ -15,7 +16,7 @@ from falcon import HTTP_401
 from falcon import HTTP_403
 from falcon import HTTP_204
 
-from nikoniko.entities import SESSION
+from nikoniko.entities import DB
 from nikoniko.entities import User, USER_SCHEMA
 from nikoniko.entities import USERPROFILE_SCHEMA
 from nikoniko.entities import Person, PERSON_SCHEMA, PEOPLE_SCHEMA
@@ -25,9 +26,39 @@ from nikoniko.entities import InvalidatedToken
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
+
 logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
-SESSION = SESSION()
+
+
+def db_connstring_from_environment():
+    ''' compose the connection string based on environment vars values '''
+    db_driver = os.getenv('DB_DRIVER', 'postgresql')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_dbname = os.getenv('DB_DBNAME', 'nikoniko')
+    db_username = os.getenv('DB_USERNAME', os.getenv('USER', None))
+    db_password = os.getenv('DB_PASSWORD', None)
+    db_connstring = '{}://{}{}{}{}:{}/{}'.format(
+        db_driver,
+        db_username if db_username else '',
+        ':{}'.format(db_password) if db_password else '',
+        '@' if db_username else '',
+        db_host,
+        db_port,
+        db_dbname)
+    LOGGER.debug(
+        'db_connstring: [%s]',
+        re.sub(
+            r'(:.+?):.*?@',
+            r'\1:XXXXXXX@',
+            db_connstring))
+    return db_connstring
+
+
+MYDB = DB(db_connstring_from_environment(), echo=True)
+MYDB.create_all()
+SESSION = MYDB.session()
 
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
