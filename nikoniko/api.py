@@ -319,23 +319,23 @@ class NikonikoAPI:
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
     def __init__(self):
-        hug.post('/login', api=API)(login)
-        hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(update_password)
-        hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user)
-        hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user_profile)
-        hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(patch_user_profile)
-        hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_person)
-        hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(people)
-        hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(board)
-        hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_boards)
+        hug.post('/login', api=API)(self.login)
+        hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.update_password)
+        hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user)
+        hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user_profile)
+        hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.patch_user_profile)
+        hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_person)
+        hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.people)
+        hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.board)
+        hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_boards)
         hug.get(
             '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
             api=API,
-            requires=TOKEN_KEY_AUTHENTICATION)(get_reported_feeling)
+            requires=TOKEN_KEY_AUTHENTICATION)(self.get_reported_feeling)
         hug.post(
             '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
             api=API,
-            requires=TOKEN_KEY_AUTHENTICATION)(create_reported_feeling)
+            requires=TOKEN_KEY_AUTHENTICATION)(self.create_reported_feeling)
 
 
 def bootstrap_db():
