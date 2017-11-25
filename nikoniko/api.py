@@ -97,131 +97,56 @@ TOKEN_KEY_AUTHENTICATION = \
 #######################################
 # Handlers
 
-def login(email: hug.types.text, password: hug.types.text, response):
-    '''Authenticate and return a token'''
-    try:
-        user = SESSION.query(User).filter_by(email=email).one()
-        if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
-            created = datetime.datetime.now()
-            return {
-                'user': user.user_id,
-                'person': user.person_id,
-                'token': jwt.encode(
-                    {
-                        'user': user.user_id,
-                        'created': created.isoformat(),
-                        'exp':
-                            (created + datetime.timedelta(days=1)).timestamp()
-                    },
-                    SECRET_KEY,
-                    algorithm='HS256'
-                )}
-        return return_unauthorised(response, email)
-    except NoResultFound as exception:
-        return return_unauthorised(response, email, exception)
-
-
-def update_password(
-        user_id: hug.types.number,
-        password: hug.types.text,
-        request,
-        response,
-        authenticated_user: hug.directives.user):
-    '''Updates a users' password '''
-    try:
-        found_user = SESSION.query(User).filter_by(user_id=user_id).one()
-    except NoResultFound as exception:
-        LOGGER.debug('User not found: %s', exception)
-        response.status = HTTP_404
-        return None
-    if user_id != authenticated_user['user']:
-        response.status = HTTP_401
-        return '''Authenticated user isn\'t allowed to update \
+class NikonikoAPI:
+    def login(email: hug.types.text, password: hug.types.text, response):
+        '''Authenticate and return a token'''
+        try:
+            user = SESSION.query(User).filter_by(email=email).one()
+            if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+                created = datetime.datetime.now()
+                return {
+                    'user': user.user_id,
+                    'person': user.person_id,
+                    'token': jwt.encode(
+                        {
+                            'user': user.user_id,
+                            'created': created.isoformat(),
+                            'exp':
+                                (created + datetime.timedelta(days=1)).timestamp()
+                        },
+                        SECRET_KEY,
+                        algorithm='HS256'
+                    )}
+            return return_unauthorised(response, email)
+        except NoResultFound as exception:
+            return return_unauthorised(response, email, exception)
+    
+    
+    def update_password(
+            user_id: hug.types.number,
+            password: hug.types.text,
+            request,
+            response,
+            authenticated_user: hug.directives.user):
+        '''Updates a users' password '''
+        try:
+            found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+        except NoResultFound as exception:
+            LOGGER.debug('User not found: %s', exception)
+            response.status = HTTP_404
+            return None
+        if user_id != authenticated_user['user']:
+            response.status = HTTP_401
+            return '''Authenticated user isn\'t allowed to update \
+                    the password for requested user'''
+        LOGGER.debug(
+            'user_id: %s, authenticated_user: %s',
+            user_id,
+            authenticated_user)
+        if user_id != authenticated_user['user']:
+            response.status = HTTP_401
+            return '''Authenticated user isn\'t allowed to update \
                 the password for requested user'''
-    LOGGER.debug(
-        'user_id: %s, authenticated_user: %s',
-        user_id,
-        authenticated_user)
-    if user_id != authenticated_user['user']:
-        response.status = HTTP_401
-        return '''Authenticated user isn\'t allowed to update \
-            the password for requested user'''
-    found_user.password_hash = bcrypt.hashpw(
-        password.encode(),
-        bcrypt.gensalt()).decode()
-    SESSION.add(found_user)
-    invalidated_token = InvalidatedToken(
-        token=request.headers['AUTHORIZATION'],
-        timestamp_invalidated=datetime.datetime.now())
-    SESSION.add(invalidated_token)
-    SESSION.commit()
-    response.status = HTTP_204
-
-
-def get_user(user_id: hug.types.number, response,
-             authenticated_user: hug.directives.user):
-    '''Returns a user'''
-    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
-    try:
-        res = SESSION.query(User).filter_by(user_id=user_id).one()
-        boards = SESSION.query(
-            Board).join(
-                Person.boards).filter(
-                    Person.person_id == res.person_id).all()
-        res.boards = boards
-    except NoResultFound as exception:
-        LOGGER.debug('User not found: %s', exception)
-        response.status = HTTP_404
-        return None
-    return USER_SCHEMA.dump(res).data
-
-
-def get_user_profile(
-        user_id: hug.types.number,
-        response,
-        authenticated_user: hug.directives.user):
-    '''Returns a user profile'''
-    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
-    try:
-        res = SESSION.query(User).filter_by(user_id=user_id).one()
-    except NoResultFound as exception:
-        LOGGER.error('User not found: %s', exception)
-        response.status = HTTP_404
-        return None
-    return USERPROFILE_SCHEMA.dump(res).data
-
-
-def patch_user_profile(  # pylint: disable=too-many-arguments
-        user_id: hug.types.number,
-        name: hug.types.text,
-        email: hug.types.text,
-        password: hug.types.text,
-        request,
-        response,
-        authenticated_user: hug.directives.user):
-    '''Patches a user's data '''
-    LOGGER.debug(
-        'User profile patch: <<"%s", "%s", "%s">>',
-        name,
-        email,
-        password)
-    LOGGER.debug('Authenticated user reported: %s', authenticated_user)
-    LOGGER.debug('Token: %s', request.headers['AUTHORIZATION'])
-    try:
-        found_user = SESSION.query(User).filter_by(user_id=user_id).one()
-    except NoResultFound as exception:
-        LOGGER.error('User not found: %s', exception)
-        response.status = HTTP_404
-        return None
-    if user_id != authenticated_user['user']:
-        response.status = HTTP_401
-        return '''Authenticated user isn\'t allowed to update \
-                the password for requested user'''
-    if name:
-        found_user.name = name
-    if email:
-        found_user.email = email
-    if password:
         found_user.password_hash = bcrypt.hashpw(
             password.encode(),
             bcrypt.gensalt()).decode()
@@ -230,95 +155,169 @@ def patch_user_profile(  # pylint: disable=too-many-arguments
             token=request.headers['AUTHORIZATION'],
             timestamp_invalidated=datetime.datetime.now())
         SESSION.add(invalidated_token)
-    try:
         SESSION.commit()
-        return
-    except InvalidRequestError:
-        response.status = HTTP_403
-        return "User profile not updated"
+        response.status = HTTP_204
+    
+    
+    def get_user(user_id: hug.types.number, response,
+                 authenticated_user: hug.directives.user):
+        '''Returns a user'''
+        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+        try:
+            res = SESSION.query(User).filter_by(user_id=user_id).one()
+            boards = SESSION.query(
+                Board).join(
+                    Person.boards).filter(
+                        Person.person_id == res.person_id).all()
+            res.boards = boards
+        except NoResultFound as exception:
+            LOGGER.debug('User not found: %s', exception)
+            response.status = HTTP_404
+            return None
+        return USER_SCHEMA.dump(res).data
+    
+    
+    def get_user_profile(
+            user_id: hug.types.number,
+            response,
+            authenticated_user: hug.directives.user):
+        '''Returns a user profile'''
+        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+        try:
+            res = SESSION.query(User).filter_by(user_id=user_id).one()
+        except NoResultFound as exception:
+            LOGGER.error('User not found: %s', exception)
+            response.status = HTTP_404
+            return None
+        return USERPROFILE_SCHEMA.dump(res).data
+    
+    
+    def patch_user_profile(  # pylint: disable=too-many-arguments
+            user_id: hug.types.number,
+            name: hug.types.text,
+            email: hug.types.text,
+            password: hug.types.text,
+            request,
+            response,
+            authenticated_user: hug.directives.user):
+        '''Patches a user's data '''
+        LOGGER.debug(
+            'User profile patch: <<"%s", "%s", "%s">>',
+            name,
+            email,
+            password)
+        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+        LOGGER.debug('Token: %s', request.headers['AUTHORIZATION'])
+        try:
+            found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+        except NoResultFound as exception:
+            LOGGER.error('User not found: %s', exception)
+            response.status = HTTP_404
+            return None
+        if user_id != authenticated_user['user']:
+            response.status = HTTP_401
+            return '''Authenticated user isn\'t allowed to update \
+                    the password for requested user'''
+        if name:
+            found_user.name = name
+        if email:
+            found_user.email = email
+        if password:
+            found_user.password_hash = bcrypt.hashpw(
+                password.encode(),
+                bcrypt.gensalt()).decode()
+            SESSION.add(found_user)
+            invalidated_token = InvalidatedToken(
+                token=request.headers['AUTHORIZATION'],
+                timestamp_invalidated=datetime.datetime.now())
+            SESSION.add(invalidated_token)
+        try:
+            SESSION.commit()
+            return
+        except InvalidRequestError:
+            response.status = HTTP_403
+            return "User profile not updated"
+    
+    
+    def get_person(person_id: hug.types.number, response):
+        '''Returns a person'''
+        try:
+            res = SESSION.query(Person).filter_by(person_id=person_id).one()
+        except NoResultFound:
+            response.status = HTTP_404
+            return None
+        return PERSON_SCHEMA.dump(res).data
+    
+    
+    def people():
+        '''Returns all the people'''
+        res = SESSION.query(Person).all()
+        return PEOPLE_SCHEMA.dump(res).data
+    
+    
+    def board(board_id: hug.types.number, response):
+        '''Returns a board'''
+        try:
+            res = SESSION.query(Board).filter_by(board_id=board_id).one()
+            for person in res.people:
+                reportedfeelings = SESSION.query(
+                    ReportedFeeling).filter(
+                        ReportedFeeling.board_id == board_id).filter(
+                            ReportedFeeling.person_id == person.person_id).all()
+                person.reportedfeelings = reportedfeelings
+        except NoResultFound:
+            response.status = HTTP_404
+            return None
+        return BOARD_SCHEMA.dump(res).data
+    
+    
+    def get_boards():
+        '''Returns all boards'''
+        res = SESSION.query(Board).all()
+        return BOARDS_SCHEMA.dump(res).data
+    
+    
+    def get_reported_feeling(
+            board_id: hug.types.number,
+            person_id: hug.types.number,
+            date: hug.types.text,
+            response):
+        '''Returns a specific reported feeling for a board, person and date'''
+        try:
+            res = SESSION.query(ReportedFeeling).filter_by(
+                board_id=board_id,
+                person_id=person_id,
+                date=date).one()
+        except NoResultFound:
+            response.status = HTTP_404
+            return None
+        return REPORTEDFEELING_SCHEMA.dump(res).data
+    
+    
+    def create_reported_feeling(
+            board_id: hug.types.number,
+            person_id: hug.types.number,
+            feeling: hug.types.text,
+            date: hug.types.text):
+        '''Creates a new reported_feeling'''
+        try:
+            reported_feeling = SESSION.query(ReportedFeeling).filter_by(
+                board_id=board_id,
+                person_id=person_id,
+                date=date).one()
+            reported_feeling.feeling = feeling
+        except NoResultFound:
+            reported_feeling = ReportedFeeling(
+                person_id=person_id,
+                board_id=board_id,
+                date=datetime.datetime.strptime(
+                    date,
+                    "%Y-%m-%d").date(),
+                feeling=feeling)
+            SESSION.add(reported_feeling)
+        SESSION.commit()
+        return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-
-def get_person(person_id: hug.types.number, response):
-    '''Returns a person'''
-    try:
-        res = SESSION.query(Person).filter_by(person_id=person_id).one()
-    except NoResultFound:
-        response.status = HTTP_404
-        return None
-    return PERSON_SCHEMA.dump(res).data
-
-
-def people():
-    '''Returns all the people'''
-    res = SESSION.query(Person).all()
-    return PEOPLE_SCHEMA.dump(res).data
-
-
-def board(board_id: hug.types.number, response):
-    '''Returns a board'''
-    try:
-        res = SESSION.query(Board).filter_by(board_id=board_id).one()
-        for person in res.people:
-            reportedfeelings = SESSION.query(
-                ReportedFeeling).filter(
-                    ReportedFeeling.board_id == board_id).filter(
-                        ReportedFeeling.person_id == person.person_id).all()
-            person.reportedfeelings = reportedfeelings
-    except NoResultFound:
-        response.status = HTTP_404
-        return None
-    return BOARD_SCHEMA.dump(res).data
-
-
-def get_boards():
-    '''Returns all boards'''
-    res = SESSION.query(Board).all()
-    return BOARDS_SCHEMA.dump(res).data
-
-
-def get_reported_feeling(
-        board_id: hug.types.number,
-        person_id: hug.types.number,
-        date: hug.types.text,
-        response):
-    '''Returns a specific reported feeling for a board, person and date'''
-    try:
-        res = SESSION.query(ReportedFeeling).filter_by(
-            board_id=board_id,
-            person_id=person_id,
-            date=date).one()
-    except NoResultFound:
-        response.status = HTTP_404
-        return None
-    return REPORTEDFEELING_SCHEMA.dump(res).data
-
-
-def create_reported_feeling(
-        board_id: hug.types.number,
-        person_id: hug.types.number,
-        feeling: hug.types.text,
-        date: hug.types.text):
-    '''Creates a new reported_feeling'''
-    try:
-        reported_feeling = SESSION.query(ReportedFeeling).filter_by(
-            board_id=board_id,
-            person_id=person_id,
-            date=date).one()
-        reported_feeling.feeling = feeling
-    except NoResultFound:
-        reported_feeling = ReportedFeeling(
-            person_id=person_id,
-            board_id=board_id,
-            date=datetime.datetime.strptime(
-                date,
-                "%Y-%m-%d").date(),
-            feeling=feeling)
-        SESSION.add(reported_feeling)
-    SESSION.commit()
-    return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
-
-
-class NikonikoAPI:
     def __init__(self):
         hug.post('/login', api=API)(login)
         hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(update_password)
