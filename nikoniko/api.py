@@ -119,7 +119,6 @@ def login(email: hug.types.text, password: hug.types.text, response):
         return return_unauthorised(response, email)
     except NoResultFound as exception:
         return return_unauthorised(response, email, exception)
-hug.post('/login', api=API)(login)
 
 
 def update_password(
@@ -157,7 +156,6 @@ def update_password(
     SESSION.add(invalidated_token)
     SESSION.commit()
     response.status = HTTP_204
-hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(update_password)
 
 
 def get_user(user_id: hug.types.number, response,
@@ -176,7 +174,6 @@ def get_user(user_id: hug.types.number, response,
         response.status = HTTP_404
         return None
     return USER_SCHEMA.dump(res).data
-hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user)
 
 
 def get_user_profile(
@@ -192,7 +189,6 @@ def get_user_profile(
         response.status = HTTP_404
         return None
     return USERPROFILE_SCHEMA.dump(res).data
-hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user_profile)
 
 
 def patch_user_profile(  # pylint: disable=too-many-arguments
@@ -240,7 +236,6 @@ def patch_user_profile(  # pylint: disable=too-many-arguments
     except InvalidRequestError:
         response.status = HTTP_403
         return "User profile not updated"
-hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(patch_user_profile)
 
 
 def get_person(person_id: hug.types.number, response):
@@ -251,14 +246,12 @@ def get_person(person_id: hug.types.number, response):
         response.status = HTTP_404
         return None
     return PERSON_SCHEMA.dump(res).data
-hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_person)
 
 
 def people():
     '''Returns all the people'''
     res = SESSION.query(Person).all()
     return PEOPLE_SCHEMA.dump(res).data
-hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(people)
 
 
 def board(board_id: hug.types.number, response):
@@ -275,14 +268,12 @@ def board(board_id: hug.types.number, response):
         response.status = HTTP_404
         return None
     return BOARD_SCHEMA.dump(res).data
-hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(board)
 
 
 def get_boards():
     '''Returns all boards'''
     res = SESSION.query(Board).all()
     return BOARDS_SCHEMA.dump(res).data
-hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_boards)
 
 
 def get_reported_feeling(
@@ -300,10 +291,6 @@ def get_reported_feeling(
         response.status = HTTP_404
         return None
     return REPORTEDFEELING_SCHEMA.dump(res).data
-hug.get(
-    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    api=API,
-    requires=TOKEN_KEY_AUTHENTICATION)(get_reported_feeling)
 
 
 def create_reported_feeling(
@@ -329,10 +316,27 @@ def create_reported_feeling(
         SESSION.add(reported_feeling)
     SESSION.commit()
     return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
-hug.post(
-    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    api=API,
-    requires=TOKEN_KEY_AUTHENTICATION)(create_reported_feeling)
+
+
+class NikonikoAPI:
+    def __init__(self):
+        hug.post('/login', api=API)(login)
+        hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(update_password)
+        hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user)
+        hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user_profile)
+        hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(patch_user_profile)
+        hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_person)
+        hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(people)
+        hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(board)
+        hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_boards)
+        hug.get(
+            '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
+            api=API,
+            requires=TOKEN_KEY_AUTHENTICATION)(get_reported_feeling)
+        hug.post(
+            '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
+            api=API,
+            requires=TOKEN_KEY_AUTHENTICATION)(create_reported_feeling)
 
 
 def bootstrap_db():
@@ -383,3 +387,6 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
         'yes', 'y', 'true', 't', '1']:
     LOGGER.info('Bootstrapping DB')
     bootstrap_db()
+
+NIKONIKOAPI = NikonikoAPI()
+
