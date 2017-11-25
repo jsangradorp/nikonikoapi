@@ -73,7 +73,30 @@ def return_unauthorised(response, email, exception=None):
         email, exception)
 
 
-@hug.post('/login')
+def token_verify(token):
+    ''' hug authentication token verification function '''
+    LOGGER.debug('Token: %s', token)
+    try:
+        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+        LOGGER.debug('Decoded token: %s', decoded_token)
+    except jwt.DecodeError:
+        return False
+    try:
+        SESSION.query(
+            InvalidatedToken).filter_by(token=token).one()
+        return False
+    except NoResultFound:
+        return decoded_token
+
+
+TOKEN_KEY_AUTHENTICATION = \
+    hug.authentication.token(  # pylint: disable=no-value-for-parameter
+        token_verify)
+
+
+#######################################
+# Handlers
+
 def login(email: hug.types.text, password: hug.types.text, response):
     '''Authenticate and return a token'''
     try:
@@ -96,30 +119,9 @@ def login(email: hug.types.text, password: hug.types.text, response):
         return return_unauthorised(response, email)
     except NoResultFound as exception:
         return return_unauthorised(response, email, exception)
+hug.post('/login', api=API)(login)
 
 
-def token_verify(token):
-    ''' hug authentication token verification function '''
-    LOGGER.debug('Token: %s', token)
-    try:
-        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
-        LOGGER.debug('Decoded token: %s', decoded_token)
-    except jwt.DecodeError:
-        return False
-    try:
-        SESSION.query(
-            InvalidatedToken).filter_by(token=token).one()
-        return False
-    except NoResultFound:
-        return decoded_token
-
-
-TOKEN_KEY_AUTHENTICATION = \
-    hug.authentication.token(  # pylint: disable=no-value-for-parameter
-        token_verify)
-
-
-@hug.put('/password/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def update_password(
         user_id: hug.types.number,
         password: hug.types.text,
@@ -155,9 +157,9 @@ def update_password(
     SESSION.add(invalidated_token)
     SESSION.commit()
     response.status = HTTP_204
+hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(update_password)
 
 
-@hug.get('/users/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_user(user_id: hug.types.number, response,
              authenticated_user: hug.directives.user):
     '''Returns a user'''
@@ -174,9 +176,9 @@ def get_user(user_id: hug.types.number, response,
         response.status = HTTP_404
         return None
     return USER_SCHEMA.dump(res).data
+hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user)
 
 
-@hug.get('/userProfiles/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_user_profile(
         user_id: hug.types.number,
         response,
@@ -190,9 +192,9 @@ def get_user_profile(
         response.status = HTTP_404
         return None
     return USERPROFILE_SCHEMA.dump(res).data
+hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_user_profile)
 
 
-@hug.patch('/userProfiles/{user_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def patch_user_profile(  # pylint: disable=too-many-arguments
         user_id: hug.types.number,
         name: hug.types.text,
@@ -238,9 +240,9 @@ def patch_user_profile(  # pylint: disable=too-many-arguments
     except InvalidRequestError:
         response.status = HTTP_403
         return "User profile not updated"
+hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(patch_user_profile)
 
 
-@hug.get('/people/{person_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def get_person(person_id: hug.types.number, response):
     '''Returns a person'''
     try:
@@ -249,16 +251,16 @@ def get_person(person_id: hug.types.number, response):
         response.status = HTTP_404
         return None
     return PERSON_SCHEMA.dump(res).data
+hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_person)
 
 
-@hug.get('/people', requires=TOKEN_KEY_AUTHENTICATION)
 def people():
     '''Returns all the people'''
     res = SESSION.query(Person).all()
     return PEOPLE_SCHEMA.dump(res).data
+hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(people)
 
 
-@hug.get('/boards/{board_id}', requires=TOKEN_KEY_AUTHENTICATION)
 def board(board_id: hug.types.number, response):
     '''Returns a board'''
     try:
@@ -273,18 +275,16 @@ def board(board_id: hug.types.number, response):
         response.status = HTTP_404
         return None
     return BOARD_SCHEMA.dump(res).data
+hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(board)
 
 
-@hug.get('/boards', requires=TOKEN_KEY_AUTHENTICATION)
 def get_boards():
     '''Returns all boards'''
     res = SESSION.query(Board).all()
     return BOARDS_SCHEMA.dump(res).data
+hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(get_boards)
 
 
-@hug.get(
-    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    requires=TOKEN_KEY_AUTHENTICATION)
 def get_reported_feeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
@@ -300,11 +300,12 @@ def get_reported_feeling(
         response.status = HTTP_404
         return None
     return REPORTEDFEELING_SCHEMA.dump(res).data
-
-
-@hug.post(
+hug.get(
     '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-    requires=TOKEN_KEY_AUTHENTICATION)
+    api=API,
+    requires=TOKEN_KEY_AUTHENTICATION)(get_reported_feeling)
+
+
 def create_reported_feeling(
         board_id: hug.types.number,
         person_id: hug.types.number,
@@ -328,6 +329,10 @@ def create_reported_feeling(
         SESSION.add(reported_feeling)
     SESSION.commit()
     return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
+hug.post(
+    '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
+    api=API,
+    requires=TOKEN_KEY_AUTHENTICATION)(create_reported_feeling)
 
 
 def bootstrap_db():
