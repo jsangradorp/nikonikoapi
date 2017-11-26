@@ -106,7 +106,7 @@ class TestAPI(object):
             }
         ])
 
-    def test_get_board(self):
+    def test_get_specific_board(self):
         ''' test getting a specific board '''
         # Given
         delete_db_tables()
@@ -134,6 +134,13 @@ class TestAPI(object):
                 }
             ]
         })
+        # When
+        response = hug.test.get(  # pylint: disable=no-member
+            TESTAPI,
+            '/boards/-1',
+            headers={'Authorization': TOKEN})
+        # Then
+        assert response.status == HTTP_404
 
     def test_get_all_boards(self):
         ''' test getting all boards '''
