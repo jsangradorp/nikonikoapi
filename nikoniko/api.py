@@ -27,53 +27,13 @@ from nikoniko.entities import InvalidatedToken
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
 
-logging.basicConfig(level=logging.DEBUG)
-LOGGER = logging.getLogger(__name__)
-
-
-def db_connstring_from_environment():
-    ''' compose the connection string based on environment vars values '''
-    db_driver = os.getenv('DB_DRIVER', 'postgresql')
-    db_host = os.getenv('DB_HOST', 'localhost')
-    db_port = os.getenv('DB_PORT', '5432')
-    db_dbname = os.getenv('DB_DBNAME', 'nikoniko')
-    db_username = os.getenv('DB_USERNAME', os.getenv('USER', None))
-    db_password = os.getenv('DB_PASSWORD', None)
-    db_connstring = '{}://{}{}{}{}:{}/{}'.format(
-        db_driver,
-        db_username if db_username else '',
-        ':{}'.format(db_password) if db_password else '',
-        '@' if db_username else '',
-        db_host,
-        db_port,
-        db_dbname)
-    LOGGER.debug(
-        'db_connstring: [%s]',
-        re.sub(
-            r'(:.+?):.*?@',
-            r'\1:XXXXXXX@',
-            db_connstring))
-    return db_connstring
-
-
-def return_unauthorised(response, email, exception=None):
-    ''' Update the response to mean unauthorised access '''
-    response.status = HTTP_401
-    return 'Invalid email and/or password for email: {} [{}]'.format(
-        email, exception)
-
-
-
-#######################################
-# Handlers
-
 class NikonikoAPI:
     def token_verify(self, token):
         ''' hug authentication token verification function '''
-        LOGGER.debug('Token: %s', token)
+        self.logger.debug('Token: %s', token)
         try:
             decoded_token = jwt.decode(token, self.secret_key, algorithm='HS256')
-            LOGGER.debug('Decoded token: %s', decoded_token)
+            self.logger.debug('Decoded token: %s', decoded_token)
         except jwt.DecodeError:
             return False
         try:
@@ -82,6 +42,12 @@ class NikonikoAPI:
             return False
         except NoResultFound:
             return decoded_token
+
+    def return_unauthorised(self, response, email, exception=None):
+        ''' Update the response to mean unauthorised access '''
+        response.status = HTTP_401
+        return 'Invalid email and/or password for email: {} [{}]'.format(
+            email, exception)
 
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
@@ -118,14 +84,14 @@ class NikonikoAPI:
         try:
             found_user = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
-            LOGGER.debug('User not found: %s', exception)
+            self.logger.debug('User not found: %s', exception)
             response.status = HTTP_404
             return None
         if user_id != authenticated_user['user']:
             response.status = HTTP_401
             return '''Authenticated user isn\'t allowed to update \
                     the password for requested user'''
-        LOGGER.debug(
+        self.logger.debug(
             'user_id: %s, authenticated_user: %s',
             user_id,
             authenticated_user)
@@ -148,7 +114,7 @@ class NikonikoAPI:
     def get_user(self, user_id: hug.types.number, response,
                  authenticated_user: hug.directives.user):
         '''Returns a user'''
-        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug('Authenticated user reported: %s', authenticated_user)
         try:
             res = self.session.query(User).filter_by(user_id=user_id).one()
             boards = self.session.query(
@@ -157,7 +123,7 @@ class NikonikoAPI:
                         Person.person_id == res.person_id).all()
             res.boards = boards
         except NoResultFound as exception:
-            LOGGER.debug('User not found: %s', exception)
+            self.logger.debug('User not found: %s', exception)
             response.status = HTTP_404
             return None
         return USER_SCHEMA.dump(res).data
@@ -169,11 +135,11 @@ class NikonikoAPI:
             response,
             authenticated_user: hug.directives.user):
         '''Returns a user profile'''
-        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug('Authenticated user reported: %s', authenticated_user)
         try:
             res = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
-            LOGGER.error('User not found: %s', exception)
+            self.logger.error('User not found: %s', exception)
             response.status = HTTP_404
             return None
         return USERPROFILE_SCHEMA.dump(res).data
@@ -189,17 +155,17 @@ class NikonikoAPI:
             response,
             authenticated_user: hug.directives.user):
         '''Patches a user's data '''
-        LOGGER.debug(
+        self.logger.debug(
             'User profile patch: <<"%s", "%s", "%s">>',
             name,
             email,
             password)
-        LOGGER.debug('Authenticated user reported: %s', authenticated_user)
-        LOGGER.debug('Token: %s', request.headers['AUTHORIZATION'])
+        self.logger.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug('Token: %s', request.headers['AUTHORIZATION'])
         try:
             found_user = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
-            LOGGER.error('User not found: %s', exception)
+            self.logger.error('User not found: %s', exception)
             response.status = HTTP_404
             return None
         if user_id != authenticated_user['user']:
@@ -308,10 +274,12 @@ class NikonikoAPI:
         self.session.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-    def __init__(self, api, session, secret_key):
+    def __init__(self, api, session, secret_key, logger):
         self.api = api
         self.session = session
         self.secret_key = secret_key
+        self.logger = logger
+
         self.api.http.add_middleware(CORSMiddleware(self.api))
         hug.post('/login', api=self.api)(self.login)
         TOKEN_KEY_AUTHENTICATION = \
@@ -379,14 +347,43 @@ def bootstrap_db():
         self.session.rollback()
 
 
-if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
-        'yes', 'y', 'true', 't', '1']:
-    LOGGER.info('Bootstrapping DB')
-    bootstrap_db()
+#--------------------------------------------------------
 
-MYDB = DB(db_connstring_from_environment(), echo=True)
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+
+
+def db_connstring_from_environment(logger=logging.getLogger(__name__)):
+    ''' compose the connection string based on environment vars values '''
+    db_driver = os.getenv('DB_DRIVER', 'postgresql')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_dbname = os.getenv('DB_DBNAME', 'nikoniko')
+    db_username = os.getenv('DB_USERNAME', os.getenv('USER', None))
+    db_password = os.getenv('DB_PASSWORD', None)
+    db_connstring = '{}://{}{}{}{}:{}/{}'.format(
+        db_driver,
+        db_username if db_username else '',
+        ':{}'.format(db_password) if db_password else '',
+        '@' if db_username else '',
+        db_host,
+        db_port,
+        db_dbname)
+    logger.debug(
+        'db_connstring: [%s]',
+        re.sub(
+            r'(:.+?):.*?@',
+            r'\1:XXXXXXX@',
+            db_connstring))
+    return db_connstring
+MYDB = DB(db_connstring_from_environment(LOGGER), echo=True)
 MYDB.create_all()
 SESSJION = MYDB.session()
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
-NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSJION, SECRET_KEY)
+if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
+        'yes', 'y', 'true', 't', '1']:
+    LOGGER.info('Bootstrapping DB')
+    bootstrap_db(LOGGER)
+
+NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSJION, SECRET_KEY, LOGGER)
