@@ -62,9 +62,6 @@ SESSION = MYDB.session()
 
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
-API = hug.API(__name__)
-API.http.add_middleware(CORSMiddleware(API))
-
 
 def return_unauthorised(response, email, exception=None):
     ''' Update the response to mean unauthorised access '''
@@ -73,32 +70,27 @@ def return_unauthorised(response, email, exception=None):
         email, exception)
 
 
-def token_verify(token):
-    ''' hug authentication token verification function '''
-    LOGGER.debug('Token: %s', token)
-    try:
-        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
-        LOGGER.debug('Decoded token: %s', decoded_token)
-    except jwt.DecodeError:
-        return False
-    try:
-        SESSION.query(
-            InvalidatedToken).filter_by(token=token).one()
-        return False
-    except NoResultFound:
-        return decoded_token
-
-
-TOKEN_KEY_AUTHENTICATION = \
-    hug.authentication.token(  # pylint: disable=no-value-for-parameter
-        token_verify)
-
 
 #######################################
 # Handlers
 
 class NikonikoAPI:
-    def login(email: hug.types.text, password: hug.types.text, response):
+    def token_verify(self, token):
+        ''' hug authentication token verification function '''
+        LOGGER.debug('Token: %s', token)
+        try:
+            decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+            LOGGER.debug('Decoded token: %s', decoded_token)
+        except jwt.DecodeError:
+            return False
+        try:
+            SESSION.query(
+                InvalidatedToken).filter_by(token=token).one()
+            return False
+        except NoResultFound:
+            return decoded_token
+
+    def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
         try:
             user = SESSION.query(User).filter_by(email=email).one()
@@ -123,6 +115,7 @@ class NikonikoAPI:
     
     
     def update_password(
+            self,
             user_id: hug.types.number,
             password: hug.types.text,
             request,
@@ -159,7 +152,7 @@ class NikonikoAPI:
         response.status = HTTP_204
     
     
-    def get_user(user_id: hug.types.number, response,
+    def get_user(self, user_id: hug.types.number, response,
                  authenticated_user: hug.directives.user):
         '''Returns a user'''
         LOGGER.debug('Authenticated user reported: %s', authenticated_user)
@@ -178,6 +171,7 @@ class NikonikoAPI:
     
     
     def get_user_profile(
+            self,
             user_id: hug.types.number,
             response,
             authenticated_user: hug.directives.user):
@@ -193,6 +187,7 @@ class NikonikoAPI:
     
     
     def patch_user_profile(  # pylint: disable=too-many-arguments
+            self,
             user_id: hug.types.number,
             name: hug.types.text,
             email: hug.types.text,
@@ -239,7 +234,7 @@ class NikonikoAPI:
             return "User profile not updated"
     
     
-    def get_person(person_id: hug.types.number, response):
+    def get_person(self, person_id: hug.types.number, response):
         '''Returns a person'''
         try:
             res = SESSION.query(Person).filter_by(person_id=person_id).one()
@@ -249,13 +244,13 @@ class NikonikoAPI:
         return PERSON_SCHEMA.dump(res).data
     
     
-    def people():
+    def people(self):
         '''Returns all the people'''
         res = SESSION.query(Person).all()
         return PEOPLE_SCHEMA.dump(res).data
     
     
-    def board(board_id: hug.types.number, response):
+    def board(self, board_id: hug.types.number, response):
         '''Returns a board'''
         try:
             res = SESSION.query(Board).filter_by(board_id=board_id).one()
@@ -271,13 +266,14 @@ class NikonikoAPI:
         return BOARD_SCHEMA.dump(res).data
     
     
-    def get_boards():
+    def get_boards(self):
         '''Returns all boards'''
         res = SESSION.query(Board).all()
         return BOARDS_SCHEMA.dump(res).data
     
     
     def get_reported_feeling(
+            self,
             board_id: hug.types.number,
             person_id: hug.types.number,
             date: hug.types.text,
@@ -295,6 +291,7 @@ class NikonikoAPI:
     
     
     def create_reported_feeling(
+            self,
             board_id: hug.types.number,
             person_id: hug.types.number,
             feeling: hug.types.text,
@@ -318,23 +315,28 @@ class NikonikoAPI:
         SESSION.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-    def __init__(self):
-        hug.post('/login', api=API)(self.login)
-        hug.put('/password/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.update_password)
-        hug.get('/users/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user)
-        hug.get('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user_profile)
-        hug.patch('/userProfiles/{user_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.patch_user_profile)
-        hug.get('/people/{person_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_person)
-        hug.get('/people', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.people)
-        hug.get('/boards/{board_id}', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.board)
-        hug.get('/boards', api=API, requires=TOKEN_KEY_AUTHENTICATION)(self.get_boards)
+    def __init__(self, api):
+        self.api = api
+        self.api.http.add_middleware(CORSMiddleware(self.api))
+        hug.post('/login', api=self.api)(self.login)
+        TOKEN_KEY_AUTHENTICATION = \
+            hug.authentication.token(  # pylint: disable=no-value-for-parameter
+                self.token_verify)
+        hug.put('/password/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.update_password)
+        hug.get('/users/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user)
+        hug.get('/userProfiles/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user_profile)
+        hug.patch('/userProfiles/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.patch_user_profile)
+        hug.get('/people/{person_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_person)
+        hug.get('/people', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.people)
+        hug.get('/boards/{board_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.board)
+        hug.get('/boards', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_boards)
         hug.get(
             '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-            api=API,
+            api=self.api,
             requires=TOKEN_KEY_AUTHENTICATION)(self.get_reported_feeling)
         hug.post(
             '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
-            api=API,
+            api=self.api,
             requires=TOKEN_KEY_AUTHENTICATION)(self.create_reported_feeling)
 
 
@@ -387,5 +389,5 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
     LOGGER.info('Bootstrapping DB')
     bootstrap_db()
 
-NIKONIKOAPI = NikonikoAPI()
+NIKONIKOAPI = NikonikoAPI(hug.API(__name__))
 
