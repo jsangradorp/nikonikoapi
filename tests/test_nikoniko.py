@@ -54,8 +54,13 @@ def delete_db_tables():
 
 
 @pytest.fixture()
-def api():
+def empty_db():
     delete_db_tables()
+
+
+@pytest.fixture()
+def api():
+    TESTSESSION.expunge_all()
     return NikonikoAPI(
             api=TESTAPI,
             session=TESTSESSION,
@@ -64,7 +69,18 @@ def api():
             )
 
 
-@pytest.mark.usefixtures("api")
+@pytest.fixture()
+def person():
+    TESTSESSION.expunge_all()
+    person = Person(
+        person_id=1,
+        label='Julio')
+    TESTSESSION.add(person)
+    TESTSESSION.commit()
+    return person
+
+
+@pytest.mark.usefixtures("empty_db", "api", "person")
 class TestAPI(object):
     ''' API testing class '''
     personLabel1 = "Julio"
@@ -155,31 +171,22 @@ class TestAPI(object):
         # Then
         assert decoded_token is False
 
-    def test_get_specific_person(self):
+    def test_get_specific_person(self, person, api):
         ''' test getting a specific person '''
         # Given
-        delete_db_tables()
-        person = Person(label=self.personLabel1)
-        TESTSESSION.add(person)
-        TESTSESSION.commit()
-        person_id = person.person_id
+        response = StartResponseMock()
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/people/{}'.format(person_id),
-            headers={'Authorization': TOKEN})
+        result = api.get_person(person.person_id, response)
         # Then
-        assert(response.data == {
-            "person_id": person_id,
-            "label": self.personLabel1
+        assert(result == {
+            "person_id": person.person_id,
+            "label": person.label
         })
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/people/-1',
-            headers={'Authorization': TOKEN})
+        result = api.get_person(-1, response)
         # Then
         assert response.status == HTTP_404
+        assert result is None
 
     def test_get_all_people(self):
         ''' test getting all people '''

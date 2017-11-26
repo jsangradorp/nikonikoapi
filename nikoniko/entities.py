@@ -132,6 +132,7 @@ class Board(DB.base):  # pylint: disable=too-few-public-methods
 
     people = relationship(
         'Person',
+        order_by='Person.person_id',
         secondary=MEMBERSHIP,
         back_populates='boards')
     reported_feelings = relationship('ReportedFeeling')
