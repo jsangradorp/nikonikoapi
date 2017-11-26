@@ -82,7 +82,6 @@ def person():
 
 @pytest.mark.usefixtures("empty_db", "api", "person")
 class TestAPI(object):
-    ''' API testing class '''
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
@@ -172,7 +171,6 @@ class TestAPI(object):
         assert decoded_token is False
 
     def test_get_specific_person(self, person, api):
-        ''' test getting a specific person '''
         # Given
         response = StartResponseMock()
         # When
@@ -189,7 +187,6 @@ class TestAPI(object):
         assert result is None
 
     def test_get_all_people(self):
-        ''' test getting all people '''
         # Given
         delete_db_tables()
         person1 = Person(label=self.personLabel1)
@@ -217,7 +214,6 @@ class TestAPI(object):
         ])
 
     def test_get_specific_board(self):
-        ''' test getting a specific board '''
         # Given
         delete_db_tables()
         person1 = Person(label=self.personLabel1)
@@ -253,7 +249,6 @@ class TestAPI(object):
         assert response.status == HTTP_404
 
     def test_get_all_boards(self):
-        ''' test getting all boards '''
         # Given
         delete_db_tables()
         person1 = Person(label=self.personLabel1)
