@@ -6,6 +6,8 @@ import datetime
 import hug
 import jwt
 import bcrypt
+import logging
+
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from falcon import HTTP_404
@@ -21,6 +23,9 @@ from nikoniko.entities import ReportedFeeling, REPORTEDFEELING_SCHEMA
 from nikoniko.entities import InvalidatedToken
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
+
+NULL_LOGGER = logging.getLogger(__name__)
+NULL_LOGGER.addHandler(logging.NullHandler())
 
 
 def return_unauthorised(response, email, exception=None):
@@ -271,7 +276,12 @@ class NikonikoAPI:
         self.session.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-    def __init__(self, api, session, secret_key, logger):
+    def __init__(
+            self,
+            api,
+            session,
+            secret_key,
+            logger=NULL_LOGGER):
         self.api = api
         self.session = session
         self.secret_key = secret_key
