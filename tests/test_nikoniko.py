@@ -2,27 +2,22 @@
 import logging
 import datetime
 import os
+import pytest
+
+import bcrypt
 import hug
 import jwt
 
+from falcon import HTTP_401
+from falcon import HTTP_404
+from falcon.testing import StartResponseMock
+
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
+from nikoniko.entities import InvalidatedToken
 from nikoniko.nikonikoapi import NikonikoAPI
 
-from falcon import HTTP_404
-
 from .context import nikoniko
-
-
-SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
-TOKEN = jwt.encode(
-    {
-        'user': 1,
-        'created': datetime.datetime.now().isoformat()
-    },
-    SECRET_KEY,
-    algorithm='HS256'
-).decode()
 
 
 TESTLOGGER = logging.getLogger(__name__)
@@ -31,6 +26,17 @@ TESTDB.create_all()
 TESTSESSION = TESTDB.session()
 TESTENGINE = TESTDB.engine
 TESTAPI = hug.API(__name__)
+
+SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
+TOKEN_OBJECT = {
+    'user': 1,
+    'created': datetime.datetime.now().isoformat()
+}
+TOKEN = jwt.encode(
+    TOKEN_OBJECT,
+    SECRET_KEY,
+    algorithm='HS256'
+).decode()
 
 NIKONIKOAPI = NikonikoAPI(TESTAPI, TESTSESSION, SECRET_KEY, TESTLOGGER)
 NIKONIKOAPI.setup()
@@ -44,14 +50,110 @@ def delete_db_tables():
     TESTENGINE.execute(ReportedFeeling.__table__.delete())
     TESTENGINE.execute(Person.__table__.delete())
     TESTENGINE.execute(Board.__table__.delete())
+    TESTENGINE.execute(InvalidatedToken.__table__.delete())
 
 
+@pytest.fixture()
+def api():
+    delete_db_tables()
+    return NikonikoAPI(
+            api=TESTAPI,
+            session=TESTSESSION,
+            secret_key=SECRET_KEY,
+            logger=TESTLOGGER
+            )
+
+
+@pytest.mark.usefixtures("api")
 class TestAPI(object):
     ''' API testing class '''
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
     boardLabel2 = "Sabadell"
+
+    def test_login_ok(self, api):
+        # Given
+        valid_user = User(
+                user_id=1,
+                name='John Smith',
+                email='john@example.com',
+                person_id=2,
+                password_hash=bcrypt.hashpw(
+                    'whocares'.encode(),
+                    bcrypt.gensalt()
+                    ).decode()
+                )
+        TESTSESSION.add(valid_user)
+        TESTSESSION.commit()
+        # When
+        login = api.login('john@example.com', 'whocares', None)
+        # Then
+        decoded_token = jwt.decode(
+            login['token'], api.secret_key, algorithm='HS256')
+        assert decoded_token['user'] == 1
+        assert decoded_token['created'] is not None
+        assert decoded_token['exp'] is not None
+
+    def test_login_bad_user(self, api):
+        # Given
+        response = StartResponseMock()
+        # When
+        login = api.login('inexistent@example.com', 'whocares', response)
+        # Then
+        assert login == ('Invalid email and/or password for email: '
+                         'inexistent@example.com [No row was found for one()]')
+        assert response.status == HTTP_401
+
+    def test_login_bad_password(self, api):
+        # Given
+        valid_user = User(
+                user_id=1,
+                name='John Smith',
+                email='john@example.com',
+                person_id=2,
+                password_hash=bcrypt.hashpw(
+                    'whocares'.encode(),
+                    bcrypt.gensalt()
+                    ).decode()
+                )
+        TESTSESSION.add(valid_user)
+        TESTSESSION.commit()
+        response = StartResponseMock()
+        # When
+        login = api.login('john@example.com', 'wrongpassword', response)
+        # Then
+        assert login == ('Invalid email and/or password for email: '
+                         'john@example.com [None]')
+        assert response.status == HTTP_401
+
+    def test_valid_token(self, api):
+        # Given
+        valid_token = TOKEN
+        # When
+        decoded_token = api.token_verify(valid_token)
+        # Then
+        assert decoded_token == TOKEN_OBJECT
+
+    def test_invalidated_token(self, api):
+        # Given
+        valid_token = TOKEN
+        invalidated = InvalidatedToken(
+            token=TOKEN, timestamp_invalidated=datetime.datetime.now())
+        TESTSESSION.add(invalidated)
+        TESTSESSION.commit()
+        # When
+        decoded_token = api.token_verify(valid_token)
+        # Then
+        assert decoded_token is False
+
+    def test_invalid_token(self, api):
+        # Given
+        invalid_token = '#### INVALID TOKEN ####'
+        # When
+        decoded_token = api.token_verify(invalid_token)
+        # Then
+        assert decoded_token is False
 
     def test_get_specific_person(self):
         ''' test getting a specific person '''
@@ -71,11 +173,12 @@ class TestAPI(object):
             "person_id": person_id,
             "label": self.personLabel1
         })
-        # Then
+        # When
         response = hug.test.get(  # pylint: disable=no-member
             TESTAPI,
             '/people/-1',
             headers={'Authorization': TOKEN})
+        # Then
         assert response.status == HTTP_404
 
     def test_get_all_people(self):
