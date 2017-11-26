@@ -1,11 +1,8 @@
 """
 Provide an API to manage happiness logs (nikoniko) for teams
 """
-import logging
 import datetime
 
-import os
-import re
 import hug
 import jwt
 import bcrypt
@@ -16,7 +13,6 @@ from falcon import HTTP_401
 from falcon import HTTP_403
 from falcon import HTTP_204
 
-from nikoniko.entities import DB
 from nikoniko.entities import User, USER_SCHEMA
 from nikoniko.entities import USERPROFILE_SCHEMA
 from nikoniko.entities import Person, PERSON_SCHEMA, PEOPLE_SCHEMA
@@ -27,12 +23,21 @@ from nikoniko.entities import InvalidatedToken
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
 
+def return_unauthorised(response, email, exception=None):
+    ''' Update the response to mean unauthorised access '''
+    response.status = HTTP_401
+    return 'Invalid email and/or password for email: {} [{}]'.format(
+        email, exception)
+
+
 class NikonikoAPI:
+    ''' Wrapper around hug API for initialization, testing, etc. '''
     def token_verify(self, token):
         ''' hug authentication token verification function '''
         self.logger.debug('Token: %s', token)
         try:
-            decoded_token = jwt.decode(token, self.secret_key, algorithm='HS256')
+            decoded_token = jwt.decode(
+                token, self.secret_key, algorithm='HS256')
             self.logger.debug('Decoded token: %s', decoded_token)
         except jwt.DecodeError:
             return False
@@ -42,12 +47,6 @@ class NikonikoAPI:
             return False
         except NoResultFound:
             return decoded_token
-
-    def return_unauthorised(self, response, email, exception=None):
-        ''' Update the response to mean unauthorised access '''
-        response.status = HTTP_401
-        return 'Invalid email and/or password for email: {} [{}]'.format(
-            email, exception)
 
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
@@ -63,7 +62,8 @@ class NikonikoAPI:
                             'user': user.user_id,
                             'created': created.isoformat(),
                             'exp':
-                                (created + datetime.timedelta(days=1)).timestamp()
+                                (created +
+                                 datetime.timedelta(days=1)).timestamp()
                         },
                         self.secret_key,
                         algorithm='HS256'
@@ -72,8 +72,7 @@ class NikonikoAPI:
         except NoResultFound as exception:
             return return_unauthorised(response, email, exception)
 
-
-    def update_password(
+    def update_password(  # pylint: disable=too-many-arguments
             self,
             user_id: hug.types.number,
             password: hug.types.text,
@@ -82,7 +81,8 @@ class NikonikoAPI:
             authenticated_user: hug.directives.user):
         '''Updates a users' password '''
         try:
-            found_user = self.session.query(User).filter_by(user_id=user_id).one()
+            found_user = self.session.query(
+                User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
             self.logger.debug('User not found: %s', exception)
             response.status = HTTP_404
@@ -110,11 +110,11 @@ class NikonikoAPI:
         self.session.commit()
         response.status = HTTP_204
 
-
     def get_user(self, user_id: hug.types.number, response,
                  authenticated_user: hug.directives.user):
         '''Returns a user'''
-        self.logger.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug(
+            'Authenticated user reported: %s', authenticated_user)
         try:
             res = self.session.query(User).filter_by(user_id=user_id).one()
             boards = self.session.query(
@@ -128,14 +128,14 @@ class NikonikoAPI:
             return None
         return USER_SCHEMA.dump(res).data
 
-
     def get_user_profile(
             self,
             user_id: hug.types.number,
             response,
             authenticated_user: hug.directives.user):
         '''Returns a user profile'''
-        self.logger.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug(
+            'Authenticated user reported: %s', authenticated_user)
         try:
             res = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
@@ -143,7 +143,6 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return USERPROFILE_SCHEMA.dump(res).data
-
 
     def patch_user_profile(  # pylint: disable=too-many-arguments
             self,
@@ -160,10 +159,12 @@ class NikonikoAPI:
             name,
             email,
             password)
-        self.logger.debug('Authenticated user reported: %s', authenticated_user)
+        self.logger.debug(
+            'Authenticated user reported: %s', authenticated_user)
         self.logger.debug('Token: %s', request.headers['AUTHORIZATION'])
         try:
-            found_user = self.session.query(User).filter_by(user_id=user_id).one()
+            found_user = self.session.query(
+                User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
             self.logger.error('User not found: %s', exception)
             response.status = HTTP_404
@@ -192,22 +193,20 @@ class NikonikoAPI:
             response.status = HTTP_403
             return "User profile not updated"
 
-
     def get_person(self, person_id: hug.types.number, response):
         '''Returns a person'''
         try:
-            res = self.session.query(Person).filter_by(person_id=person_id).one()
+            res = self.session.query(
+                Person).filter_by(person_id=person_id).one()
         except NoResultFound:
             response.status = HTTP_404
             return None
         return PERSON_SCHEMA.dump(res).data
 
-
     def people(self):
         '''Returns all the people'''
         res = self.session.query(Person).all()
         return PEOPLE_SCHEMA.dump(res).data
-
 
     def board(self, board_id: hug.types.number, response):
         '''Returns a board'''
@@ -217,19 +216,18 @@ class NikonikoAPI:
                 reportedfeelings = self.session.query(
                     ReportedFeeling).filter(
                         ReportedFeeling.board_id == board_id).filter(
-                            ReportedFeeling.person_id == person.person_id).all()
+                            ReportedFeeling.person_id ==
+                            person.person_id).all()
                 person.reportedfeelings = reportedfeelings
         except NoResultFound:
             response.status = HTTP_404
             return None
         return BOARD_SCHEMA.dump(res).data
 
-
     def get_boards(self):
         '''Returns all boards'''
         res = self.session.query(Board).all()
         return BOARDS_SCHEMA.dump(res).data
-
 
     def get_reported_feeling(
             self,
@@ -247,7 +245,6 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return REPORTEDFEELING_SCHEMA.dump(res).data
-
 
     def create_reported_feeling(
             self,
@@ -282,67 +279,48 @@ class NikonikoAPI:
 
         self.api.http.add_middleware(CORSMiddleware(self.api))
         hug.post('/login', api=self.api)(self.login)
-        TOKEN_KEY_AUTHENTICATION = \
+        token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter
                 self.token_verify)
-        hug.put('/password/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.update_password)
-        hug.get('/users/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user)
-        hug.get('/userProfiles/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_user_profile)
-        hug.patch('/userProfiles/{user_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.patch_user_profile)
-        hug.get('/people/{person_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_person)
-        hug.get('/people', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.people)
-        hug.get('/boards/{board_id}', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.board)
-        hug.get('/boards', api=self.api, requires=TOKEN_KEY_AUTHENTICATION)(self.get_boards)
+        hug.put(
+            '/password/{user_id}',
+            api=self.api,
+            requires=token_key_authentication)(self.update_password)
         hug.get(
-            '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
+            '/users/{user_id}',
             api=self.api,
-            requires=TOKEN_KEY_AUTHENTICATION)(self.get_reported_feeling)
+            requires=token_key_authentication)(self.get_user)
+        hug.get(
+            '/userProfiles/{user_id}',
+            api=self.api,
+            requires=token_key_authentication)(self.get_user_profile)
+        hug.patch(
+            '/userProfiles/{user_id}',
+            api=self.api,
+            requires=token_key_authentication)(self.patch_user_profile)
+        hug.get(
+            '/people/{person_id}',
+            api=self.api,
+            requires=token_key_authentication)(self.get_person)
+        hug.get(
+            '/people',
+            api=self.api,
+            requires=token_key_authentication)(self.people)
+        hug.get(
+            '/boards/{board_id}',
+            api=self.api,
+            requires=token_key_authentication)(self.board)
+        hug.get(
+            '/boards',
+            api=self.api,
+            requires=token_key_authentication)(self.get_boards)
+        hug.get(
+            ('/reportedfeelings/boards/{board_id}'
+             '/people/{person_id}/dates/{date}'),
+            api=self.api,
+            requires=token_key_authentication)(self.get_reported_feeling)
         hug.post(
-            '/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}',
+            ('/reportedfeelings/boards/{board_id}'
+             '/people/{person_id}/dates/{date}'),
             api=self.api,
-            requires=TOKEN_KEY_AUTHENTICATION)(self.create_reported_feeling)
-
-
-def bootstrap_db():
-    ''' Fill in the DB with initial data '''
-    one_person = Person(person_id=1, label='Ann')
-    other_person = Person(person_id=2, label='John')
-    self.session.add(one_person)
-    self.session.add(other_person)
-    try:
-        self.session.commit()
-    except InvalidRequestError as exception:
-        print(exception)
-        self.session.rollback()
-    one_user = User(
-        user_id=1,
-        name='John Smith',
-        email='john@example.com',
-        person_id=2,
-        password_hash=bcrypt.hashpw(
-            'whocares'.encode(),
-            bcrypt.gensalt()).decode())
-    self.session.add(one_user)
-    try:
-        self.session.commit()
-    except InvalidRequestError as exception:
-        print(exception)
-        self.session.rollback()
-    one_board = Board(board_id=1, label='Global board')
-    one_board.people.append(one_person)
-    one_board.people.append(other_person)
-    self.session.add(one_board)
-    another_board = Board(board_id=2, label='The A Team')
-    another_board.people.append(one_person)
-    another_board.people.append(other_person)
-    self.session.add(another_board)
-    and_a_third__board = Board(board_id=3, label='The Harlem Globetrotters')
-    and_a_third__board.people.append(one_person)
-    and_a_third__board.people.append(other_person)
-    self.session.add(and_a_third__board)
-    try:
-        self.session.commit()
-    except InvalidRequestError as exception:
-        print(exception)
-        self.session.rollback()
-
+            requires=token_key_authentication)(self.create_reported_feeling)
