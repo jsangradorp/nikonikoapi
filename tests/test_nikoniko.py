@@ -7,22 +7,14 @@ import jwt
 
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
-import nikoniko.api
+from nikoniko.nikonikoapi import NikonikoAPI
 
 from falcon import HTTP_404
 
 from .context import nikoniko
 
 
-LOGGER = logging.getLogger(__name__)
-TESTDB = DB('sqlite:///:memory:', echo=False)
-TESTDB.create_all()
-SESSION = TESTDB.session()
-ENGINE = TESTDB.engine
-
-
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
-
 TOKEN = jwt.encode(
     {
         'user': 1,
@@ -33,14 +25,24 @@ TOKEN = jwt.encode(
 ).decode()
 
 
+TESTLOGGER = logging.getLogger(__name__)
+TESTDB = DB('sqlite:///:memory:', echo=False)
+TESTDB.create_all()
+TESTSESSION = TESTDB.session()
+TESTENGINE = TESTDB.engine
+TESTAPI = hug.API(__name__)
+
+NIKONIKOAPI = NikonikoAPI(TESTAPI, TESTSESSION, SECRET_KEY, TESTLOGGER)
+
+
 def delete_db_tables():
     ''' Delete all DB tables '''
-    ENGINE.execute(
+    TESTENGINE.execute(
         MEMBERSHIP.delete())  # pylint: disable=no-value-for-parameter
-    ENGINE.execute(User.__table__.delete())
-    ENGINE.execute(ReportedFeeling.__table__.delete())
-    ENGINE.execute(Person.__table__.delete())
-    ENGINE.execute(Board.__table__.delete())
+    TESTENGINE.execute(User.__table__.delete())
+    TESTENGINE.execute(ReportedFeeling.__table__.delete())
+    TESTENGINE.execute(Person.__table__.delete())
+    TESTENGINE.execute(Board.__table__.delete())
 
 
 class TestAPI(object):
@@ -55,12 +57,12 @@ class TestAPI(object):
         # Given
         delete_db_tables()
         person = Person(label=self.personLabel1)
-        SESSION.add(person)
-        SESSION.commit()
+        TESTSESSION.add(person)
+        TESTSESSION.commit()
         person_id = person.person_id
         # When
         response = hug.test.get(  # pylint: disable=no-member
-            nikoniko.api,
+            TESTAPI,
             '/people/{}'.format(person_id),
             headers={'Authorization': TOKEN})
         # Then
@@ -70,7 +72,7 @@ class TestAPI(object):
         })
         # Then
         response = hug.test.get(  # pylint: disable=no-member
-            nikoniko.api,
+            TESTAPI,
             '/people/-1',
             headers={'Authorization': TOKEN})
         assert response.status == HTTP_404
@@ -81,14 +83,14 @@ class TestAPI(object):
         delete_db_tables()
         person1 = Person(label=self.personLabel1)
         person2 = Person(label=self.personLabel2)
-        SESSION.add(person1)
-        SESSION.add(person2)
-        SESSION.commit()
+        TESTSESSION.add(person1)
+        TESTSESSION.add(person2)
+        TESTSESSION.commit()
         id1 = person1.person_id
         id2 = person2.person_id
         # When
         response = hug.test.get(  # pylint: disable=no-member
-            nikoniko.api,
+            TESTAPI,
             '/people',
             headers={'Authorization': TOKEN})
         # Then
@@ -110,13 +112,13 @@ class TestAPI(object):
         person1 = Person(label=self.personLabel1)
         board1 = Board(label=self.boardLabel1)
         board1.people.append(person1)
-        SESSION.add(board1)
-        SESSION.commit()
+        TESTSESSION.add(board1)
+        TESTSESSION.commit()
         id1 = board1.board_id
         pid1 = person1.person_id
         # When
         response = hug.test.get(  # pylint: disable=no-member
-            nikoniko.api,
+            TESTAPI,
             '/boards/{}'.format(id1),
             headers={'Authorization': TOKEN})
         # Then
@@ -141,17 +143,17 @@ class TestAPI(object):
         board1 = Board(label=self.boardLabel1)
         board1.people.append(person1)
         board1.people.append(person2)
-        SESSION.add(board1)
+        TESTSESSION.add(board1)
         board2 = Board(label=self.boardLabel2)
-        SESSION.add(board2)
-        SESSION.commit()
+        TESTSESSION.add(board2)
+        TESTSESSION.commit()
         id1 = board1.board_id
         pid1 = person1.person_id
         pid2 = person2.person_id
         id2 = board2.board_id
         # When
         response = hug.test.get(  # pylint: disable=no-member
-            nikoniko.api,
+            TESTAPI,
             '/boards',
             headers={'Authorization': TOKEN})
         # Then
