@@ -1,5 +1,3 @@
-- Mock the DB in tests
-- 'Objectize' the design
 - Up coverage to >100%
 - Proper release procedure
 - Align spec with implementation
