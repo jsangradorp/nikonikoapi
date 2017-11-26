@@ -56,9 +56,6 @@ def db_connstring_from_environment():
     return db_connstring
 
 
-SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
-
-
 def return_unauthorised(response, email, exception=None):
     ''' Update the response to mean unauthorised access '''
     response.status = HTTP_401
@@ -75,12 +72,12 @@ class NikonikoAPI:
         ''' hug authentication token verification function '''
         LOGGER.debug('Token: %s', token)
         try:
-            decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+            decoded_token = jwt.decode(token, self.secret_key, algorithm='HS256')
             LOGGER.debug('Decoded token: %s', decoded_token)
         except jwt.DecodeError:
             return False
         try:
-            SESSION.query(
+            self.session.query(
                 InvalidatedToken).filter_by(token=token).one()
             return False
         except NoResultFound:
@@ -89,7 +86,7 @@ class NikonikoAPI:
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
         try:
-            user = SESSION.query(User).filter_by(email=email).one()
+            user = self.session.query(User).filter_by(email=email).one()
             if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
                 created = datetime.datetime.now()
                 return {
@@ -102,7 +99,7 @@ class NikonikoAPI:
                             'exp':
                                 (created + datetime.timedelta(days=1)).timestamp()
                         },
-                        SECRET_KEY,
+                        self.secret_key,
                         algorithm='HS256'
                     )}
             return return_unauthorised(response, email)
@@ -119,7 +116,7 @@ class NikonikoAPI:
             authenticated_user: hug.directives.user):
         '''Updates a users' password '''
         try:
-            found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+            found_user = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
             LOGGER.debug('User not found: %s', exception)
             response.status = HTTP_404
@@ -139,12 +136,12 @@ class NikonikoAPI:
         found_user.password_hash = bcrypt.hashpw(
             password.encode(),
             bcrypt.gensalt()).decode()
-        SESSION.add(found_user)
+        self.session.add(found_user)
         invalidated_token = InvalidatedToken(
             token=request.headers['AUTHORIZATION'],
             timestamp_invalidated=datetime.datetime.now())
-        SESSION.add(invalidated_token)
-        SESSION.commit()
+        self.session.add(invalidated_token)
+        self.session.commit()
         response.status = HTTP_204
     
     
@@ -153,8 +150,8 @@ class NikonikoAPI:
         '''Returns a user'''
         LOGGER.debug('Authenticated user reported: %s', authenticated_user)
         try:
-            res = SESSION.query(User).filter_by(user_id=user_id).one()
-            boards = SESSION.query(
+            res = self.session.query(User).filter_by(user_id=user_id).one()
+            boards = self.session.query(
                 Board).join(
                     Person.boards).filter(
                         Person.person_id == res.person_id).all()
@@ -174,7 +171,7 @@ class NikonikoAPI:
         '''Returns a user profile'''
         LOGGER.debug('Authenticated user reported: %s', authenticated_user)
         try:
-            res = SESSION.query(User).filter_by(user_id=user_id).one()
+            res = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
             LOGGER.error('User not found: %s', exception)
             response.status = HTTP_404
@@ -200,7 +197,7 @@ class NikonikoAPI:
         LOGGER.debug('Authenticated user reported: %s', authenticated_user)
         LOGGER.debug('Token: %s', request.headers['AUTHORIZATION'])
         try:
-            found_user = SESSION.query(User).filter_by(user_id=user_id).one()
+            found_user = self.session.query(User).filter_by(user_id=user_id).one()
         except NoResultFound as exception:
             LOGGER.error('User not found: %s', exception)
             response.status = HTTP_404
@@ -217,13 +214,13 @@ class NikonikoAPI:
             found_user.password_hash = bcrypt.hashpw(
                 password.encode(),
                 bcrypt.gensalt()).decode()
-            SESSION.add(found_user)
+            self.session.add(found_user)
             invalidated_token = InvalidatedToken(
                 token=request.headers['AUTHORIZATION'],
                 timestamp_invalidated=datetime.datetime.now())
-            SESSION.add(invalidated_token)
+            self.session.add(invalidated_token)
         try:
-            SESSION.commit()
+            self.session.commit()
             return
         except InvalidRequestError:
             response.status = HTTP_403
@@ -233,7 +230,7 @@ class NikonikoAPI:
     def get_person(self, person_id: hug.types.number, response):
         '''Returns a person'''
         try:
-            res = SESSION.query(Person).filter_by(person_id=person_id).one()
+            res = self.session.query(Person).filter_by(person_id=person_id).one()
         except NoResultFound:
             response.status = HTTP_404
             return None
@@ -242,16 +239,16 @@ class NikonikoAPI:
     
     def people(self):
         '''Returns all the people'''
-        res = SESSION.query(Person).all()
+        res = self.session.query(Person).all()
         return PEOPLE_SCHEMA.dump(res).data
     
     
     def board(self, board_id: hug.types.number, response):
         '''Returns a board'''
         try:
-            res = SESSION.query(Board).filter_by(board_id=board_id).one()
+            res = self.session.query(Board).filter_by(board_id=board_id).one()
             for person in res.people:
-                reportedfeelings = SESSION.query(
+                reportedfeelings = self.session.query(
                     ReportedFeeling).filter(
                         ReportedFeeling.board_id == board_id).filter(
                             ReportedFeeling.person_id == person.person_id).all()
@@ -264,7 +261,7 @@ class NikonikoAPI:
     
     def get_boards(self):
         '''Returns all boards'''
-        res = SESSION.query(Board).all()
+        res = self.session.query(Board).all()
         return BOARDS_SCHEMA.dump(res).data
     
     
@@ -276,7 +273,7 @@ class NikonikoAPI:
             response):
         '''Returns a specific reported feeling for a board, person and date'''
         try:
-            res = SESSION.query(ReportedFeeling).filter_by(
+            res = self.session.query(ReportedFeeling).filter_by(
                 board_id=board_id,
                 person_id=person_id,
                 date=date).one()
@@ -294,7 +291,7 @@ class NikonikoAPI:
             date: hug.types.text):
         '''Creates a new reported_feeling'''
         try:
-            reported_feeling = SESSION.query(ReportedFeeling).filter_by(
+            reported_feeling = self.session.query(ReportedFeeling).filter_by(
                 board_id=board_id,
                 person_id=person_id,
                 date=date).one()
@@ -307,14 +304,14 @@ class NikonikoAPI:
                     date,
                     "%Y-%m-%d").date(),
                 feeling=feeling)
-            SESSION.add(reported_feeling)
-        SESSION.commit()
+            self.session.add(reported_feeling)
+        self.session.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-    def __init__(self, api, session):
+    def __init__(self, api, session, secret_key):
         self.api = api
         self.session = session
-        self.api.context['session'] = self.session
+        self.secret_key = secret_key
         self.api.http.add_middleware(CORSMiddleware(self.api))
         hug.post('/login', api=self.api)(self.login)
         TOKEN_KEY_AUTHENTICATION = \
@@ -342,13 +339,13 @@ def bootstrap_db():
     ''' Fill in the DB with initial data '''
     one_person = Person(person_id=1, label='Ann')
     other_person = Person(person_id=2, label='John')
-    SESSION.add(one_person)
-    SESSION.add(other_person)
+    self.session.add(one_person)
+    self.session.add(other_person)
     try:
-        SESSION.commit()
+        self.session.commit()
     except InvalidRequestError as exception:
         print(exception)
-        SESSION.rollback()
+        self.session.rollback()
     one_user = User(
         user_id=1,
         name='John Smith',
@@ -357,29 +354,29 @@ def bootstrap_db():
         password_hash=bcrypt.hashpw(
             'whocares'.encode(),
             bcrypt.gensalt()).decode())
-    SESSION.add(one_user)
+    self.session.add(one_user)
     try:
-        SESSION.commit()
+        self.session.commit()
     except InvalidRequestError as exception:
         print(exception)
-        SESSION.rollback()
+        self.session.rollback()
     one_board = Board(board_id=1, label='Global board')
     one_board.people.append(one_person)
     one_board.people.append(other_person)
-    SESSION.add(one_board)
+    self.session.add(one_board)
     another_board = Board(board_id=2, label='The A Team')
     another_board.people.append(one_person)
     another_board.people.append(other_person)
-    SESSION.add(another_board)
+    self.session.add(another_board)
     and_a_third__board = Board(board_id=3, label='The Harlem Globetrotters')
     and_a_third__board.people.append(one_person)
     and_a_third__board.people.append(other_person)
-    SESSION.add(and_a_third__board)
+    self.session.add(and_a_third__board)
     try:
-        SESSION.commit()
+        self.session.commit()
     except InvalidRequestError as exception:
         print(exception)
-        SESSION.rollback()
+        self.session.rollback()
 
 
 if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
@@ -389,7 +386,7 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
 
 MYDB = DB(db_connstring_from_environment(), echo=True)
 MYDB.create_all()
-SESSION = MYDB.session()
+SESSJION = MYDB.session()
+SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
-NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSION)
-
+NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSJION, SECRET_KEY)
