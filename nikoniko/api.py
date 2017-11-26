@@ -56,10 +56,6 @@ def db_connstring_from_environment():
     return db_connstring
 
 
-MYDB = DB(db_connstring_from_environment(), echo=True)
-MYDB.create_all()
-SESSION = MYDB.session()
-
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
 
@@ -315,8 +311,10 @@ class NikonikoAPI:
         SESSION.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
 
-    def __init__(self, api):
+    def __init__(self, api, session):
         self.api = api
+        self.session = session
+        self.api.context['session'] = self.session
         self.api.http.add_middleware(CORSMiddleware(self.api))
         hug.post('/login', api=self.api)(self.login)
         TOKEN_KEY_AUTHENTICATION = \
@@ -389,5 +387,9 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
     LOGGER.info('Bootstrapping DB')
     bootstrap_db()
 
-NIKONIKOAPI = NikonikoAPI(hug.API(__name__))
+MYDB = DB(db_connstring_from_environment(), echo=True)
+MYDB.create_all()
+SESSION = MYDB.session()
+
+NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSION)
 
