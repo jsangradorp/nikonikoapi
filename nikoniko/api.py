@@ -99,3 +99,4 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
     bootstrap_db(SESSJION)
 
 NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSJION, SECRET_KEY, LOGGER)
+NIKONIKOAPI.setup()

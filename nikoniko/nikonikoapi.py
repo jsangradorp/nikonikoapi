@@ -277,7 +277,14 @@ class NikonikoAPI:
         self.secret_key = secret_key
         self.logger = logger
 
+    def setup(self):
+        self.setup_cors()
+        self.setup_endpoints()
+
+    def setup_cors(self):
         self.api.http.add_middleware(CORSMiddleware(self.api))
+
+    def setup_endpoints(self):
         hug.post('/login', api=self.api)(self.login)
         token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter

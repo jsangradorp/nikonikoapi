@@ -33,6 +33,7 @@ TESTENGINE = TESTDB.engine
 TESTAPI = hug.API(__name__)
 
 NIKONIKOAPI = NikonikoAPI(TESTAPI, TESTSESSION, SECRET_KEY, TESTLOGGER)
+NIKONIKOAPI.setup()
 
 
 def delete_db_tables():
