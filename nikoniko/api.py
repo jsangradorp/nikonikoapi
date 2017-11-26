@@ -3,8 +3,8 @@ import logging
 import os
 import re
 
-from nikonikoapi import NikonikoAPI
-from entities import DB
+from nikoniko.nikonikoapi import NikonikoAPI
+from nikoniko.entities import DB
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
