@@ -70,8 +70,7 @@ def api():
 
 
 @pytest.fixture()
-def person():
-    TESTSESSION.expunge_all()
+def person1():
     person = Person(
         person_id=1,
         label='Julio')
@@ -80,7 +79,17 @@ def person():
     return person
 
 
-@pytest.mark.usefixtures("empty_db", "api", "person")
+@pytest.fixture()
+def person2():
+    person = Person(
+        person_id=2,
+        label='Marc')
+    TESTSESSION.add(person)
+    TESTSESSION.commit()
+    return person
+
+
+@pytest.mark.usefixtures("empty_db", "api", "person1", "person2")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
@@ -170,15 +179,15 @@ class TestAPI(object):
         # Then
         assert decoded_token is False
 
-    def test_get_specific_person(self, person, api):
+    def test_get_specific_person(self, person1, api):
         # Given
         response = StartResponseMock()
         # When
-        result = api.get_person(person.person_id, response)
+        result = api.get_person(person1.person_id, response)
         # Then
         assert(result == {
-            "person_id": person.person_id,
-            "label": person.label
+            "person_id": person1.person_id,
+            "label": person1.label
         })
         # When
         result = api.get_person(-1, response)
@@ -186,30 +195,18 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
-    def test_get_all_people(self):
-        # Given
-        delete_db_tables()
-        person1 = Person(label=self.personLabel1)
-        person2 = Person(label=self.personLabel2)
-        TESTSESSION.add(person1)
-        TESTSESSION.add(person2)
-        TESTSESSION.commit()
-        id1 = person1.person_id
-        id2 = person2.person_id
+    def test_get_all_people(self, person2, person1, api):
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/people',
-            headers={'Authorization': TOKEN})
+        result = api.people()
         # Then
-        assert(response.data == [
+        assert(result == [
             {
-                "person_id": id1,
-                "label": self.personLabel1
+                "person_id": person1.person_id,
+                "label": person1.label
             },
             {
-                "person_id": id2,
-                "label": self.personLabel2
+                "person_id": person2.person_id,
+                "label": person2.label
             }
         ])
 
