@@ -109,7 +109,7 @@ def board2():
     return board
 
 
-@pytest.mark.usefixtures("empty_db", "api", "person1", "person2", "board1")
+@pytest.mark.usefixtures("empty_db", "api", "person1", "board1")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
