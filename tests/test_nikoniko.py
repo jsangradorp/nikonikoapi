@@ -89,7 +89,17 @@ def person2():
     return person
 
 
-@pytest.mark.usefixtures("empty_db", "api", "person1", "person2")
+@pytest.fixture()
+def board1():
+    board = Board(
+        board_id=1,
+        label='Daganzo')
+    TESTSESSION.add(board)
+    TESTSESSION.commit()
+    return board
+
+
+@pytest.mark.usefixtures("empty_db", "api", "person1", "person2", "board1")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
@@ -210,40 +220,22 @@ class TestAPI(object):
             }
         ])
 
-    def test_get_specific_board(self):
+    def test_get_specific_board(self, api, board1):
         # Given
-        delete_db_tables()
-        person1 = Person(label=self.personLabel1)
-        board1 = Board(label=self.boardLabel1)
-        board1.people.append(person1)
-        TESTSESSION.add(board1)
-        TESTSESSION.commit()
-        id1 = board1.board_id
-        pid1 = person1.person_id
+        response = StartResponseMock()
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/boards/{}'.format(id1),
-            headers={'Authorization': TOKEN})
+        result = api.board(board1.board_id, response)
         # Then
-        assert(response.data == {
-            "board_id": id1,
-            "label": self.boardLabel1,
-            "people": [
-                {
-                    "person_id": pid1,
-                    "label": self.personLabel1,
-                    "reportedfeelings": []
-                }
-            ]
+        assert(result == {
+            "board_id": board1.board_id,
+            "label": board1.label,
+            "people": []
         })
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/boards/-1',
-            headers={'Authorization': TOKEN})
+        result = api.board(-1, response)
         # Then
         assert response.status == HTTP_404
+        assert result is None
 
     def test_get_all_boards(self):
         # Given
