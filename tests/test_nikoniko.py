@@ -90,10 +90,11 @@ def person2():
 
 
 @pytest.fixture()
-def board1():
+def board1(person1):
     board = Board(
         board_id=1,
         label='Daganzo')
+    board.people.append(person1)
     TESTSESSION.add(board)
     TESTSESSION.commit()
     return board
@@ -230,7 +231,7 @@ class TestAPI(object):
             }
         ])
 
-    def test_get_specific_board(self, api, board1):
+    def test_get_specific_board(self, api, board1, person1):
         # Given
         response = StartResponseMock()
         # When
@@ -239,7 +240,12 @@ class TestAPI(object):
         assert(result == {
             "board_id": board1.board_id,
             "label": board1.label,
-            "people": []
+            "people": [
+                {
+                    "person_id": person1.person_id,
+                    "label": person1.label,
+                    "reportedfeelings": []
+                }]
         })
         # When
         result = api.board(-1, response)
@@ -247,7 +253,7 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
-    def test_get_all_boards(self, api, board1, board2):
+    def test_get_all_boards(self, api, board1, board2, person1):
         # Given
         response = StartResponseMock()
         # When
@@ -257,7 +263,11 @@ class TestAPI(object):
             {
                 "board_id": board1.board_id,
                 "label": board1.label,
-                "people": []
+                "people": [
+                    {
+                        "person_id": person1.person_id,
+                        "label": person1.label
+                    }]
             },
             {
                 "board_id": board2.board_id,
