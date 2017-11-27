@@ -99,6 +99,16 @@ def board1():
     return board
 
 
+@pytest.fixture()
+def board2():
+    board = Board(
+        board_id=2,
+        label='Sabadell')
+    TESTSESSION.add(board)
+    TESTSESSION.commit()
+    return board
+
+
 @pytest.mark.usefixtures("empty_db", "api", "person1", "person2", "board1")
 class TestAPI(object):
     personLabel1 = "Julio"
@@ -237,47 +247,21 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
-    def test_get_all_boards(self):
+    def test_get_all_boards(self, api, board1, board2):
         # Given
-        delete_db_tables()
-        person1 = Person(label=self.personLabel1)
-        person2 = Person(label=self.personLabel2)
-        board1 = Board(label=self.boardLabel1)
-        board1.people.append(person1)
-        board1.people.append(person2)
-        TESTSESSION.add(board1)
-        board2 = Board(label=self.boardLabel2)
-        TESTSESSION.add(board2)
-        TESTSESSION.commit()
-        id1 = board1.board_id
-        pid1 = person1.person_id
-        pid2 = person2.person_id
-        id2 = board2.board_id
+        response = StartResponseMock()
         # When
-        response = hug.test.get(  # pylint: disable=no-member
-            TESTAPI,
-            '/boards',
-            headers={'Authorization': TOKEN})
+        result = api.get_boards()
         # Then
-        assert(response.data == [
+        assert(result == [
             {
-                "board_id": id1,
-                "label": self.boardLabel1,
-                "people": [
-                    {
-                        "person_id": pid1,
-                        "label": self.personLabel1
-                    },
-                    {
-                        "person_id": pid2,
-                        "label": self.personLabel2
-                    }
-                ]
+                "board_id": board1.board_id,
+                "label": board1.label,
+                "people": []
             },
             {
-                "board_id": id2,
-                "label": self.boardLabel2,
-                "people": [
-                ]
+                "board_id": board2.board_id,
+                "label": board2.label,
+                "people": []
             }
         ])
