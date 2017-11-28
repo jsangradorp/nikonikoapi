@@ -110,6 +110,19 @@ def board2():
     return board
 
 
+@pytest.fixture()
+def reportedfeeling1(board1, person1):
+    reportedfeeling = ReportedFeeling(
+        board_id=board1.board_id,
+        person_id=person1.person_id,
+        date=datetime.datetime.strptime('2017-11-27', '%Y-%m-%d'),
+        feeling='a-feeling'
+    )
+    TESTSESSION.add(reportedfeeling)
+    TESTSESSION.commit()
+    return reportedfeeling
+
+
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1")
 class TestAPI(object):
     personLabel1 = "Julio"
@@ -275,3 +288,29 @@ class TestAPI(object):
                 "people": []
             }
         ])
+
+    def test_get_reportedfeeling(self, api, reportedfeeling1):
+        # Given
+        response = StartResponseMock()
+        # When
+        result = api.get_reported_feeling(
+                reportedfeeling1.board_id,
+                reportedfeeling1.person_id,
+                '2017-11-27',
+                response)
+        # Then
+        assert result == {
+                "board_id": reportedfeeling1.board_id,
+                "person_id": reportedfeeling1.person_id,
+                "date": "2017-11-27",
+                "feeling": "a-feeling"
+                }
+        # When
+        result = api.get_reported_feeling(
+                reportedfeeling1.board_id,
+                reportedfeeling1.person_id,
+                '2038-01-01',
+                response)
+        # Then
+        assert response.status == HTTP_404
+        assert result is None
