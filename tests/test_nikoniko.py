@@ -278,6 +278,55 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
+    def test_get_specific_user_profile(self, api, board1, person1, user1):
+        # Given
+        response = StartResponseMock()
+        # When
+        result = api.get_user_profile(user1.user_id, response, None)
+        # Then
+        assert(result == {
+            "user_id": user1.user_id,
+            "name": user1.name,
+            "email": user1.email
+        })
+        # When
+        result = api.get_user_profile(-1, response, None)
+        # Then
+        assert response.status == HTTP_404
+        assert result is None
+
+    def test_create_reported_feeling(self, api, board1, person1):
+        # Given
+        response = StartResponseMock()
+        # When
+        result = api.create_reported_feeling(
+                board1.board_id,
+                person1.person_id,
+                "good",
+                "2017-12-01"
+                )
+        # Then
+        assert result == {
+                "board_id": board1.board_id,
+                "person_id": person1.person_id,
+                "feeling": "good",
+                "date": "2017-12-01"
+                }
+        # When
+        result = api.create_reported_feeling(
+                board1.board_id,
+                person1.person_id,
+                "bad",
+                "2017-12-01"
+                )
+        # Then
+        assert result == {
+                "board_id": board1.board_id,
+                "person_id": person1.person_id,
+                "feeling": "bad",
+                "date": "2017-12-01"
+                }
+
     def test_get_all_boards(self, api, board1, board2, person1):
         # Given
         response = StartResponseMock()
