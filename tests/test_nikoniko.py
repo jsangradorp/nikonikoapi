@@ -111,6 +111,23 @@ def board2():
 
 
 @pytest.fixture()
+def user1():
+    user = User(
+            user_id=1,
+            name='John Smith',
+            email='john@example.com',
+            person_id=2,
+            password_hash=bcrypt.hashpw(
+                'whocares'.encode(),
+                bcrypt.gensalt()
+                ).decode()
+            )
+    TESTSESSION.add(user)
+    TESTSESSION.commit()
+    return user
+
+
+@pytest.fixture()
 def reportedfeeling1(board1, person1):
     reportedfeeling = ReportedFeeling(
         board_id=board1.board_id,
@@ -123,33 +140,21 @@ def reportedfeeling1(board1, person1):
     return reportedfeeling
 
 
-@pytest.mark.usefixtures("empty_db", "api", "person1", "board1")
+@pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
     boardLabel2 = "Sabadell"
 
-    def test_login_ok(self, api):
+    def test_login_ok(self, api, user1):
         # Given
-        valid_user = User(
-                user_id=1,
-                name='John Smith',
-                email='john@example.com',
-                person_id=2,
-                password_hash=bcrypt.hashpw(
-                    'whocares'.encode(),
-                    bcrypt.gensalt()
-                    ).decode()
-                )
-        TESTSESSION.add(valid_user)
-        TESTSESSION.commit()
         # When
         login = api.login('john@example.com', 'whocares', None)
         # Then
         decoded_token = jwt.decode(
             login['token'], api.secret_key, algorithm='HS256')
-        assert decoded_token['user'] == 1
+        assert decoded_token['user'] == user1.user_id
         assert decoded_token['created'] is not None
         assert decoded_token['exp'] is not None
 
@@ -163,20 +168,8 @@ class TestAPI(object):
                          'inexistent@example.com [No row was found for one()]')
         assert response.status == HTTP_401
 
-    def test_login_bad_password(self, api):
+    def test_login_bad_password(self, api, user1):
         # Given
-        valid_user = User(
-                user_id=1,
-                name='John Smith',
-                email='john@example.com',
-                person_id=2,
-                password_hash=bcrypt.hashpw(
-                    'whocares'.encode(),
-                    bcrypt.gensalt()
-                    ).decode()
-                )
-        TESTSESSION.add(valid_user)
-        TESTSESSION.commit()
         response = StartResponseMock()
         # When
         login = api.login('john@example.com', 'wrongpassword', response)
@@ -262,6 +255,25 @@ class TestAPI(object):
         })
         # When
         result = api.board(-1, response)
+        # Then
+        assert response.status == HTTP_404
+        assert result is None
+
+    def test_get_specific_user(self, api, board1, person1, user1):
+        # Given
+        response = StartResponseMock()
+        # When
+        result = api.get_user(user1.user_id, response, None)
+        # Then
+        assert(result == {
+            "user_id": user1.user_id,
+            "name": user1.name,
+            "email": user1.email,
+            "person": user1.person,
+            "boards": []
+        })
+        # When
+        result = api.get_user(-1, response, None)
         # Then
         assert response.status == HTTP_404
         assert result is None
