@@ -29,10 +29,6 @@ class DB:
         ''' create tables in DB '''
         self.base.metadata.create_all(self.engine)
 
-    def dummy(self):
-        ''' dummy method '''
-        pass
-
 
 class InvalidatedToken(DB.base):  # pylint: disable=too-few-public-methods
     ''' Invalidated Token entity definition '''
