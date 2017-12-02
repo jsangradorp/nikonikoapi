@@ -1,3 +1,19 @@
 #!/bin/sh
 
+COV=.COVERAGE.AMOUNT
+
 make test
+
+. .venv/bin/activate
+git checkout -f $COV 2> /dev/null
+[ ! -f $COV ] && echo 0 > $COV
+OLDCOV=$(cat $COV)
+NEWCOV=$(coverage report | grep TOTAL | sed -e 's/.*\([0-9][0-9]\)%$/\1/')
+if [ $NEWCOV -lt $OLDCOV ] ; then
+    echo Bailing out because your current test coverage is $NEWCOV, which is
+    echo smaller than previous coverage of $OLDCOV.
+    exit 1
+fi
+echo $NEWCOV > $COV
+echo New coverage $NEWCOV, old $OLDCOV.
+git add $COV
