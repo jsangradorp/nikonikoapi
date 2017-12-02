@@ -157,13 +157,14 @@ def reportedfeeling1(board1, person1):
     TESTSESSION.commit()
     return reportedfeeling
 
+
 @pytest.fixture()
 def authenticated_user(user1):
-    return { "user": user1.user_id }
+    return {"user": user1.user_id}
 
 
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
-    "user2", "authenticated_user")
+                         "user2", "authenticated_user")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
@@ -412,7 +413,7 @@ class TestAPI(object):
                 authenticated_user)
         # Then
         user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
-        assert api.checkpw(user1, "newpassword") == True
+        assert api.checkpw(user1, "newpassword") is True
         # When
         result = api.update_password(
                 -1,
@@ -433,4 +434,4 @@ class TestAPI(object):
         # Then
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
-            " password for requested user")
+                          " password for requested user")

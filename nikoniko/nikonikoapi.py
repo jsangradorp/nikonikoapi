@@ -60,7 +60,7 @@ class NikonikoAPI:
         return password_hash
 
     def checkpw(self, user, password):
-            return bcrypt.checkpw(password.encode(), user.password_hash.encode())
+        return bcrypt.checkpw(password.encode(), user.password_hash.encode())
 
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
@@ -109,7 +109,7 @@ class NikonikoAPI:
         if user_id != authenticated_user['user']:
             response.status = HTTP_401
             return ('Authenticated user isn\'t allowed to update'
-                ' the password for requested user')
+                    ' the password for requested user')
         found_user.password_hash = self.hash_password(password)
         self.session.add(found_user)
         invalidated_token = InvalidatedToken(
