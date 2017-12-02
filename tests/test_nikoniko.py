@@ -188,7 +188,7 @@ class TestAPI(object):
         login = api.login('inexistent@example.com', 'whocares', response)
         # Then
         assert login == ('Invalid email and/or password for email: '
-                         'inexistent@example.com [None]')
+                         'inexistent@example.com [No row was found for one()]')
         assert response.status == HTTP_401
 
     def test_login_bad_password(self, api, user1):
@@ -412,7 +412,7 @@ class TestAPI(object):
                 authenticated_user)
         # Then
         user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
-        assert api.checkpw(user1.email, "newpassword") == True
+        assert api.checkpw(user1, "newpassword") == True
         # When
         result = api.update_password(
                 -1,

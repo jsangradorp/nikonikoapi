@@ -59,17 +59,14 @@ class NikonikoAPI:
             bcrypt.gensalt()).decode()
         return password_hash
 
-    def checkpw(self, email, password):
-        try:
-            user = self.session.query(User).filter_by(email=email).one()
+    def checkpw(self, user, password):
             return bcrypt.checkpw(password.encode(), user.password_hash.encode())
-        except NoResultFound:
-            return False
 
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
         try:
-            if self.checkpw(email, password):
+            user = self.session.query(User).filter_by(email=email).one()
+            if self.checkpw(user, password):
                 user = self.session.query(User).filter_by(email=email).one()
                 created = datetime.datetime.now()
                 return {
