@@ -2,11 +2,11 @@
 Provide an API to manage happiness logs (nikoniko) for teams
 """
 import datetime
+import logging
 
 import hug
 import jwt
 import bcrypt
-import logging
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
@@ -29,16 +29,29 @@ NULL_LOGGER.addHandler(logging.NullHandler())
 
 
 def return_unauthorised(response, email, exception=None):
-    ''' Update the response to mean unauthorised access '''
+    '''Update the response to mean unauthorised access'''
     response.status = HTTP_401
     return 'Invalid email and/or password for email: {} [{}]'.format(
         email, exception)
 
 
+def hash_password(password):
+    '''Hashes a password'''
+    password_hash = bcrypt.hashpw(
+        password.encode(),
+        bcrypt.gensalt()).decode()
+    return password_hash
+
+
+def checkpw(user, password):
+    '''Checks that a given password corresponds to a given user'''
+    return bcrypt.checkpw(password.encode(), user.password_hash.encode())
+
+
 class NikonikoAPI:
-    ''' Wrapper around hug API for initialization, testing, etc. '''
+    '''Wrapper around hug API for initialization, testing, etc.'''
     def token_verify(self, token):
-        ''' hug authentication token verification function '''
+        '''hug authentication token verification function'''
         self.logger.debug('Token: %s', token)
         try:
             decoded_token = jwt.decode(
@@ -53,20 +66,11 @@ class NikonikoAPI:
         except NoResultFound:
             return decoded_token
 
-    def hash_password(self, password):
-        password_hash = bcrypt.hashpw(
-            password.encode(),
-            bcrypt.gensalt()).decode()
-        return password_hash
-
-    def checkpw(self, user, password):
-        return bcrypt.checkpw(password.encode(), user.password_hash.encode())
-
     def login(self, email: hug.types.text, password: hug.types.text, response):
-        '''Authenticate and return a token'''
+        '''Authenticates and returns a token'''
         try:
             user = self.session.query(User).filter_by(email=email).one()
-            if self.checkpw(user, password):
+            if checkpw(user, password):
                 user = self.session.query(User).filter_by(email=email).one()
                 created = datetime.datetime.now()
                 return {
@@ -94,7 +98,7 @@ class NikonikoAPI:
             request,
             response,
             authenticated_user: hug.directives.user):
-        '''Updates a users' password '''
+        '''Updates a users' password'''
         try:
             found_user = self.session.query(
                 User).filter_by(user_id=user_id).one()
@@ -110,7 +114,7 @@ class NikonikoAPI:
             response.status = HTTP_401
             return ('Authenticated user isn\'t allowed to update'
                     ' the password for requested user')
-        found_user.password_hash = self.hash_password(password)
+        found_user.password_hash = hash_password(password)
         self.session.add(found_user)
         invalidated_token = InvalidatedToken(
             token=request.headers['AUTHORIZATION'],
@@ -162,7 +166,7 @@ class NikonikoAPI:
             request,
             response,
             authenticated_user: hug.directives.user):
-        '''Patches a user's data '''
+        '''Patches a user's data'''
         self.logger.debug(
             'User profile patch: <<"%s", "%s", "%s">>',
             name,
@@ -187,7 +191,7 @@ class NikonikoAPI:
         if email:
             found_user.email = email
         if password:
-            found_user.password_hash = self.hash_password(password)
+            found_user.password_hash = hash_password(password)
             self.invalidate_token(request.headers['AUTHORIZATION'])
         try:
             self.session.add(found_user)
@@ -198,6 +202,7 @@ class NikonikoAPI:
             return "User profile not updated"
 
     def invalidate_token(self, token):
+        '''Invalidates an authentication token in the DB'''
         invalidated_token = InvalidatedToken(
             token=token,
             timestamp_invalidated=datetime.datetime.now())
@@ -293,13 +298,16 @@ class NikonikoAPI:
         self.logger = logger
 
     def setup(self):
+        '''Set up endpoints and CORS middleware'''
         self.setup_cors()
         self.setup_endpoints()
 
     def setup_cors(self):
+        '''Add CORS middleware'''
         self.api.http.add_middleware(CORSMiddleware(self.api))
 
     def setup_endpoints(self):
+        '''Assign methods to endpoints'''
         hug.post('/login', api=self.api)(self.login)
         token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter

@@ -88,15 +88,15 @@ def bootstrap_db(session):
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.DEBUG)
 
-MYDB = DB(db_connstring_from_environment(LOGGER), echo=True)
-MYDB.create_all()
-SESSJION = MYDB.session()
+NIKONIKODB = DB(db_connstring_from_environment(LOGGER), echo=True)
+NIKONIKODB.create_all()
+SESSION = NIKONIKODB.session()
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 
 if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
         'yes', 'y', 'true', 't', '1']:
     LOGGER.info('Bootstrapping DB')
-    bootstrap_db(SESSJION)
+    bootstrap_db(SESSION)
 
-NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSJION, SECRET_KEY, LOGGER)
+NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSION, SECRET_KEY, LOGGER)
 NIKONIKOAPI.setup()

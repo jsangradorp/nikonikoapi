@@ -16,9 +16,7 @@ from falcon.testing import StartResponseMock, create_environ
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
 from nikoniko.entities import InvalidatedToken
-from nikoniko.nikonikoapi import NikonikoAPI
-
-from .context import nikoniko
+from nikoniko.nikonikoapi import NikonikoAPI, checkpw
 
 
 TESTLOGGER = logging.getLogger(__name__)
@@ -63,11 +61,11 @@ def empty_db():
 def api():
     TESTSESSION.expunge_all()
     return NikonikoAPI(
-            api=TESTAPI,
-            session=TESTSESSION,
-            secret_key=SECRET_KEY,
-            logger=TESTLOGGER
-            )
+        api=TESTAPI,
+        session=TESTSESSION,
+        secret_key=SECRET_KEY,
+        logger=TESTLOGGER
+        )
 
 
 @pytest.fixture()
@@ -114,15 +112,15 @@ def board2():
 @pytest.fixture()
 def user1():
     user = User(
-            user_id=1,
-            name='John Smith',
-            email='john@example.com',
-            person_id=2,
-            password_hash=bcrypt.hashpw(
-                'whocares'.encode(),
-                bcrypt.gensalt()
-                ).decode()
-            )
+        user_id=1,
+        name='Bob Brown',
+        email='bob@example.com',
+        person_id=2,
+        password_hash=bcrypt.hashpw(
+            'onepassword'.encode(),
+            bcrypt.gensalt()
+            ).decode()
+        )
     TESTSESSION.add(user)
     TESTSESSION.commit()
     return user
@@ -131,15 +129,15 @@ def user1():
 @pytest.fixture()
 def user2():
     user = User(
-            user_id=2,
-            name='Alice Brown',
-            email='alice@example.com',
-            person_id=1,
-            password_hash=bcrypt.hashpw(
-                'whocares'.encode(),
-                bcrypt.gensalt()
-                ).decode()
-            )
+        user_id=2,
+        name='Alice Brown',
+        email='alice@example.com',
+        person_id=1,
+        password_hash=bcrypt.hashpw(
+            'whocares'.encode(),
+            bcrypt.gensalt()
+            ).decode()
+        )
     TESTSESSION.add(user)
     TESTSESSION.commit()
     return user
@@ -165,7 +163,7 @@ def authenticated_user(user1):
 
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
                          "user2", "authenticated_user")
-class TestAPI(object):
+class TestAPI(object):  # pylint: disable=no-self-use
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
@@ -174,7 +172,7 @@ class TestAPI(object):
     def test_login_ok(self, api, user1):
         # Given
         # When
-        login = api.login('john@example.com', 'whocares', None)
+        login = api.login(user1.email, 'onepassword', None)
         # Then
         decoded_token = jwt.decode(
             login['token'], api.secret_key, algorithm='HS256')
@@ -196,10 +194,10 @@ class TestAPI(object):
         # Given
         response = StartResponseMock()
         # When
-        login = api.login('john@example.com', 'wrongpassword', response)
+        login = api.login(user1.email, 'wrongpassword', response)
         # Then
         assert login == ('Invalid email and/or password for email: '
-                         'john@example.com [None]')
+                         'bob@example.com [None]')
         assert response.status == HTTP_401
 
     def test_valid_token(self, api):
@@ -283,7 +281,7 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
-    def test_get_specific_user(self, api, board1, person1, user1):
+    def test_get_specific_user(self, api, user1):
         # Given
         response = StartResponseMock()
         # When
@@ -302,7 +300,7 @@ class TestAPI(object):
         assert response.status == HTTP_404
         assert result is None
 
-    def test_get_specific_user_profile(self, api, board1, person1, user1):
+    def test_get_specific_user_profile(self, api, user1):
         # Given
         response = StartResponseMock()
         # When
@@ -320,40 +318,36 @@ class TestAPI(object):
         assert result is None
 
     def test_create_reported_feeling(self, api, board1, person1):
-        # Given
-        response = StartResponseMock()
         # When
         result = api.create_reported_feeling(
-                board1.board_id,
-                person1.person_id,
-                "good",
-                "2017-12-01"
-                )
+            board1.board_id,
+            person1.person_id,
+            "good",
+            "2017-12-01"
+            )
         # Then
         assert result == {
-                "board_id": board1.board_id,
-                "person_id": person1.person_id,
-                "feeling": "good",
-                "date": "2017-12-01"
-                }
+            "board_id": board1.board_id,
+            "person_id": person1.person_id,
+            "feeling": "good",
+            "date": "2017-12-01"
+            }
         # When
         result = api.create_reported_feeling(
-                board1.board_id,
-                person1.person_id,
-                "bad",
-                "2017-12-01"
-                )
+            board1.board_id,
+            person1.person_id,
+            "bad",
+            "2017-12-01"
+            )
         # Then
         assert result == {
-                "board_id": board1.board_id,
-                "person_id": person1.person_id,
-                "feeling": "bad",
-                "date": "2017-12-01"
-                }
+            "board_id": board1.board_id,
+            "person_id": person1.person_id,
+            "feeling": "bad",
+            "date": "2017-12-01"
+            }
 
     def test_get_all_boards(self, api, board1, board2, person1):
-        # Given
-        response = StartResponseMock()
         # When
         result = api.get_boards()
         # Then
@@ -379,23 +373,23 @@ class TestAPI(object):
         response = StartResponseMock()
         # When
         result = api.get_reported_feeling(
-                reportedfeeling1.board_id,
-                reportedfeeling1.person_id,
-                '2017-11-27',
-                response)
+            reportedfeeling1.board_id,
+            reportedfeeling1.person_id,
+            '2017-11-27',
+            response)
         # Then
         assert result == {
-                "board_id": reportedfeeling1.board_id,
-                "person_id": reportedfeeling1.person_id,
-                "date": "2017-11-27",
-                "feeling": "a-feeling"
-                }
+            "board_id": reportedfeeling1.board_id,
+            "person_id": reportedfeeling1.person_id,
+            "date": "2017-11-27",
+            "feeling": "a-feeling"
+            }
         # When
         result = api.get_reported_feeling(
-                reportedfeeling1.board_id,
-                reportedfeeling1.person_id,
-                '2038-01-01',
-                response)
+            reportedfeeling1.board_id,
+            reportedfeeling1.person_id,
+            '2038-01-01',
+            response)
         # Then
         assert response.status == HTTP_404
         assert result is None
@@ -406,31 +400,31 @@ class TestAPI(object):
         request = Request(create_environ(headers={'AUTHORIZATION': 'XXXX'}))
         # When
         result = api.update_password(
-                user1.user_id,
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            user1.user_id,
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
-        assert api.checkpw(user1, "newpassword") is True
+        assert checkpw(user, "newpassword") is True
         # When
         result = api.update_password(
-                -1,
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            -1,
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         assert response.status == HTTP_404
         assert result is None
         # When
         result = api.update_password(
-                user2.user_id,
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            user2.user_id,
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
@@ -442,40 +436,40 @@ class TestAPI(object):
         request = Request(create_environ(headers={'AUTHORIZATION': 'XXXX'}))
         # When
         result = api.patch_user_profile(
-                user1.user_id,
-                "newname",
-                "newemail@example.com",
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            user1.user_id,
+            "newname",
+            "newemail@example.com",
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         assert result == {
-                "user_id": user1.user_id,
-                "name": "newname",
-                "email": "newemail@example.com"
-                }
+            "user_id": user1.user_id,
+            "name": "newname",
+            "email": "newemail@example.com"
+            }
         # When
         result = api.patch_user_profile(
-                -1,
-                "newname",
-                "newemail@example.com",
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            -1,
+            "newname",
+            "newemail@example.com",
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         assert response.status == HTTP_404
         assert result is None
         # When
         result = api.patch_user_profile(
-                user2.user_id,
-                "newname",
-                "newemail@example.com",
-                "newpassword",
-                request,
-                response,
-                authenticated_user)
+            user2.user_id,
+            "newname",
+            "newemail@example.com",
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
         # Then
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"

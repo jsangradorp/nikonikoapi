@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 LOGGER = logging.getLogger(__name__)
 
 
-class DB:
+class DB:  # pylint: disable=too-few-public-methods
     ''' DB / SQLAlchemy '''
     base = declarative_base()
 

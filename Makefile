@@ -36,7 +36,8 @@ serve-docs:
 
 check-coding-style: bootstrap
 	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
-	$(PYLINT) -E $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
+	$(PYLINT) $(PYTHON_MODULES) $(GENDOCS)
+	$(PYLINT) --disable=missing-docstring,no-self-use,redefined-outer-name $(TESTSPATH)
 pylint-full: check-coding-style
 	$(PYLINT) $(PYTHON_MODULES) $(TESTSPATH)
 check:
