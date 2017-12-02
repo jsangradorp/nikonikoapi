@@ -1,6 +1,7 @@
 PYTHON_MODULES := nikoniko
 PYTHONPATH := .:./nikoniko
 TESTSPATH := ./tests
+GENDOCS := ./docs/generate_api_documentation.py
 VENV := .venv
 PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test --cov=$(PYTHON_MODULES) --cov-report=html -v
 PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
@@ -34,8 +35,8 @@ serve-docs:
 	docker run -p 8081:8080 -e "SWAGGER_JSON=/spec/openapi.yaml" -v $(shell pwd)/docs/spec:/spec swaggerapi/swagger-ui
 
 check-coding-style: bootstrap
-	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH)
-	$(PYLINT) -E $(PYTHON_MODULES)
+	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
+	$(PYLINT) -E $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
 pylint-full: check-coding-style
 	$(PYLINT) $(PYTHON_MODULES) $(TESTSPATH)
 check:
@@ -43,6 +44,6 @@ check:
 test: check-coding-style check
 
 generate-json-documentation: bootstrap
-	$(PYTHON) ./docs/generate_api_documentation.py > ./docs/nikonikoapi.json
+	$(PYTHON) $(GENDOCS) > ./docs/nikonikoapi.json
 
 .PHONY: default venv requirements bootstrap check-coding-style pylint-full test check generate-json-documentation
