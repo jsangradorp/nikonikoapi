@@ -10,7 +10,8 @@ import jwt
 
 from falcon import HTTP_401
 from falcon import HTTP_404
-from falcon.testing import StartResponseMock
+from falcon import Request
+from falcon.testing import StartResponseMock, create_environ
 
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
@@ -128,6 +129,23 @@ def user1():
 
 
 @pytest.fixture()
+def user2():
+    user = User(
+            user_id=2,
+            name='Alice Brown',
+            email='alice@example.com',
+            person_id=1,
+            password_hash=bcrypt.hashpw(
+                'whocares'.encode(),
+                bcrypt.gensalt()
+                ).decode()
+            )
+    TESTSESSION.add(user)
+    TESTSESSION.commit()
+    return user
+
+
+@pytest.fixture()
 def reportedfeeling1(board1, person1):
     reportedfeeling = ReportedFeeling(
         board_id=board1.board_id,
@@ -139,8 +157,13 @@ def reportedfeeling1(board1, person1):
     TESTSESSION.commit()
     return reportedfeeling
 
+@pytest.fixture()
+def authenticated_user(user1):
+    return { "user": user1.user_id }
 
-@pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1")
+
+@pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
+    "user2", "authenticated_user")
 class TestAPI(object):
     personLabel1 = "Julio"
     personLabel2 = "Marc"
@@ -165,7 +188,7 @@ class TestAPI(object):
         login = api.login('inexistent@example.com', 'whocares', response)
         # Then
         assert login == ('Invalid email and/or password for email: '
-                         'inexistent@example.com [No row was found for one()]')
+                         'inexistent@example.com [None]')
         assert response.status == HTTP_401
 
     def test_login_bad_password(self, api, user1):
@@ -375,3 +398,39 @@ class TestAPI(object):
         # Then
         assert response.status == HTTP_404
         assert result is None
+
+    def test_update_password(self, api, user1, user2, authenticated_user):
+        # Given
+        response = StartResponseMock()
+        request = Request(create_environ(headers={'AUTHORIZATION': 'XXXX'}))
+        # When
+        result = api.update_password(
+                user1.user_id,
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
+        assert api.checkpw(user1.email, "newpassword") == True
+        # When
+        result = api.update_password(
+                -1,
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        assert response.status == HTTP_404
+        assert result is None
+        # When
+        result = api.update_password(
+                user2.user_id,
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        assert response.status == HTTP_401
+        assert result == ("Authenticated user isn't allowed to update the"
+            " password for requested user")

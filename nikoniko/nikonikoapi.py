@@ -53,11 +53,24 @@ class NikonikoAPI:
         except NoResultFound:
             return decoded_token
 
+    def hash_password(self, password):
+        password_hash = bcrypt.hashpw(
+            password.encode(),
+            bcrypt.gensalt()).decode()
+        return password_hash
+
+    def checkpw(self, email, password):
+        try:
+            user = self.session.query(User).filter_by(email=email).one()
+            return bcrypt.checkpw(password.encode(), user.password_hash.encode())
+        except NoResultFound:
+            return False
+
     def login(self, email: hug.types.text, password: hug.types.text, response):
         '''Authenticate and return a token'''
         try:
-            user = self.session.query(User).filter_by(email=email).one()
-            if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+            if self.checkpw(email, password):
+                user = self.session.query(User).filter_by(email=email).one()
                 created = datetime.datetime.now()
                 return {
                     'user': user.user_id,
@@ -92,21 +105,15 @@ class NikonikoAPI:
             self.logger.debug('User not found: %s', exception)
             response.status = HTTP_404
             return None
-        if user_id != authenticated_user['user']:
-            response.status = HTTP_401
-            return '''Authenticated user isn\'t allowed to update \
-                    the password for requested user'''
         self.logger.debug(
             'user_id: %s, authenticated_user: %s',
             user_id,
             authenticated_user)
         if user_id != authenticated_user['user']:
             response.status = HTTP_401
-            return '''Authenticated user isn\'t allowed to update \
-                the password for requested user'''
-        found_user.password_hash = bcrypt.hashpw(
-            password.encode(),
-            bcrypt.gensalt()).decode()
+            return ('Authenticated user isn\'t allowed to update'
+                ' the password for requested user')
+        found_user.password_hash = self.hash_password(password)
         self.session.add(found_user)
         invalidated_token = InvalidatedToken(
             token=request.headers['AUTHORIZATION'],
@@ -183,9 +190,7 @@ class NikonikoAPI:
         if email:
             found_user.email = email
         if password:
-            found_user.password_hash = bcrypt.hashpw(
-                password.encode(),
-                bcrypt.gensalt()).decode()
+            found_user.password_hash = self.hash_password(password)
             self.session.add(found_user)
             invalidated_token = InvalidatedToken(
                 token=request.headers['AUTHORIZATION'],
