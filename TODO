@@ -1,4 +1,3 @@
-- Up coverage to >100%
 - Add badges to README
 - Add automatic quality check (possibly with badge)
 - Add generated API documentation to the repo, if possible
