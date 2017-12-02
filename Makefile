@@ -42,4 +42,7 @@ check:
 	$(PYTEST) $(TESTSPATH)
 test: check-coding-style check
 
-.PHONY: default venv requirements bootstrap check-coding-style pylint-full test check
+generate-json-documentation: bootstrap
+	$(PYTHON) ./docs/generate_api_documentation.py > ./docs/nikonikoapi.json
+
+.PHONY: default venv requirements bootstrap check-coding-style pylint-full test check generate-json-documentation

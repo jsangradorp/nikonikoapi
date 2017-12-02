@@ -1,0 +1,211 @@
+{
+    "handlers": {
+        "/boards": {
+            "GET": {
+                "examples": [
+                    "/boards"
+                ],
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns all boards"
+            }
+        },
+        "/boards/{board_id}": {
+            "GET": {
+                "inputs": {
+                    "board_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns a board"
+            }
+        },
+        "/login": {
+            "POST": {
+                "inputs": {
+                    "email": {
+                        "type": "Basic text / string value"
+                    },
+                    "password": {
+                        "type": "Basic text / string value"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "usage": "Authenticate and return a token"
+            }
+        },
+        "/password/{user_id}": {
+            "PUT": {
+                "inputs": {
+                    "password": {
+                        "type": "Basic text / string value"
+                    },
+                    "user_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Updates a users' password "
+            }
+        },
+        "/people": {
+            "GET": {
+                "examples": [
+                    "/people"
+                ],
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns all the people"
+            }
+        },
+        "/people/{person_id}": {
+            "GET": {
+                "inputs": {
+                    "person_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns a person"
+            }
+        },
+        "/reportedfeelings/boards/{board_id}/people/{person_id}/dates/{date}": {
+            "GET": {
+                "inputs": {
+                    "board_id": {
+                        "type": "A Whole number"
+                    },
+                    "date": {
+                        "type": "Basic text / string value"
+                    },
+                    "person_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns a specific reported feeling for a board, person and date"
+            },
+            "POST": {
+                "inputs": {
+                    "board_id": {
+                        "type": "A Whole number"
+                    },
+                    "date": {
+                        "type": "Basic text / string value"
+                    },
+                    "feeling": {
+                        "type": "Basic text / string value"
+                    },
+                    "person_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Creates a new reported_feeling"
+            }
+        },
+        "/userProfiles/{user_id}": {
+            "GET": {
+                "inputs": {
+                    "user_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns a user profile"
+            },
+            "PATCH": {
+                "inputs": {
+                    "email": {
+                        "type": "Basic text / string value"
+                    },
+                    "name": {
+                        "type": "Basic text / string value"
+                    },
+                    "password": {
+                        "type": "Basic text / string value"
+                    },
+                    "user_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Patches a user's data "
+            }
+        },
+        "/users/{user_id}": {
+            "GET": {
+                "inputs": {
+                    "user_id": {
+                        "type": "A Whole number"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "requires": [
+                    "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
+                ],
+                "usage": "Returns a user"
+            }
+        }
+    },
+    "overview": " Generate JSON documentation from API definition "
+}
