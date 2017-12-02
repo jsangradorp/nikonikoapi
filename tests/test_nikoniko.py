@@ -435,3 +435,48 @@ class TestAPI(object):
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
                           " password for requested user")
+
+    def test_patch_user_profile(self, api, user1, user2, authenticated_user):
+        # Given
+        response = StartResponseMock()
+        request = Request(create_environ(headers={'AUTHORIZATION': 'XXXX'}))
+        # When
+        result = api.patch_user_profile(
+                user1.user_id,
+                "newname",
+                "newemail@example.com",
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        assert result == {
+                "user_id": user1.user_id,
+                "name": "newname",
+                "email": "newemail@example.com"
+                }
+        # When
+        result = api.patch_user_profile(
+                -1,
+                "newname",
+                "newemail@example.com",
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        assert response.status == HTTP_404
+        assert result is None
+        # When
+        result = api.patch_user_profile(
+                user2.user_id,
+                "newname",
+                "newemail@example.com",
+                "newpassword",
+                request,
+                response,
+                authenticated_user)
+        # Then
+        assert response.status == HTTP_401
+        assert result == ("Authenticated user isn't allowed to update the"
+                          " password for requested user")

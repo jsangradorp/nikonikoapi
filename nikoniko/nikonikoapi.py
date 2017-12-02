@@ -180,25 +180,28 @@ class NikonikoAPI:
             return None
         if user_id != authenticated_user['user']:
             response.status = HTTP_401
-            return '''Authenticated user isn\'t allowed to update \
-                    the password for requested user'''
+            return ('Authenticated user isn\'t allowed to update'
+                    ' the password for requested user')
         if name:
             found_user.name = name
         if email:
             found_user.email = email
         if password:
             found_user.password_hash = self.hash_password(password)
-            self.session.add(found_user)
-            invalidated_token = InvalidatedToken(
-                token=request.headers['AUTHORIZATION'],
-                timestamp_invalidated=datetime.datetime.now())
-            self.session.add(invalidated_token)
+            self.invalidate_token(request.headers['AUTHORIZATION'])
         try:
+            self.session.add(found_user)
             self.session.commit()
-            return
+            return USERPROFILE_SCHEMA.dump(found_user).data
         except InvalidRequestError:
             response.status = HTTP_403
             return "User profile not updated"
+
+    def invalidate_token(self, token):
+        invalidated_token = InvalidatedToken(
+            token=token,
+            timestamp_invalidated=datetime.datetime.now())
+        self.session.add(invalidated_token)
 
     def get_person(self, person_id: hug.types.number, response):
         '''Returns a person'''
