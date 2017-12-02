@@ -46,7 +46,7 @@
                     "content_type": "application/json",
                     "format": "JSON (Javascript Serialized Object Notation)"
                 },
-                "usage": "Authenticate and return a token"
+                "usage": "Authenticates and returns a token"
             }
         },
         "/password/{user_id}": {
@@ -66,7 +66,7 @@
                 "requires": [
                     "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
                 ],
-                "usage": "Updates a users' password "
+                "usage": "Updates a users' password"
             }
         },
         "/people": {
@@ -186,7 +186,7 @@
                 "requires": [
                     "Token verification\n\n    Checks for the Authorization header and verifies using the verify_user function\n    "
                 ],
-                "usage": "Patches a user's data "
+                "usage": "Patches a user's data"
             }
         },
         "/users/{user_id}": {
