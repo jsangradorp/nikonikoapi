@@ -16,7 +16,7 @@ setup(
     long_description=readme,
     author='Julio Sangrador-Paton',
     author_email='jsangradorp@gmail.com',
-    url='https://github.com/jsangrador/nikoniko',
+    url='https://github.com/jsangradorp/nikonikoapi',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
