@@ -1,0 +1,6 @@
+"Production"
+
+- Tag version
+- Generate Changelog
+
+- Generate package: python?
