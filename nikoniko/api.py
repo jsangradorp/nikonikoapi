@@ -1,4 +1,6 @@
 ''' "Main" entry point to run the Nikoniko API '''
+from __future__ import print_function
+
 import logging
 import os
 import re

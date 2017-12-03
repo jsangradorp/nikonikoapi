@@ -48,7 +48,7 @@ def checkpw(user, password):
     return bcrypt.checkpw(password.encode(), user.password_hash.encode())
 
 
-class NikonikoAPI:
+class NikonikoAPI(object):
     '''Wrapper around hug API for initialization, testing, etc.'''
     def token_verify(self, token):
         '''hug authentication token verification function'''
@@ -66,7 +66,7 @@ class NikonikoAPI:
         except NoResultFound:
             return decoded_token
 
-    def login(self, email: hug.types.text, password: hug.types.text, response):
+    def login(self, email, password, response):
         '''Authenticates and returns a token'''
         try:
             user = self.session.query(User).filter_by(email=email).one()
@@ -90,14 +90,17 @@ class NikonikoAPI:
             return return_unauthorised(response, email)
         except NoResultFound as exception:
             return return_unauthorised(response, email, exception)
+    login.__annotations__ = {
+        'email': hug.types.text,
+        'password': hug.types.text}
 
     def update_password(  # pylint: disable=too-many-arguments
             self,
-            user_id: hug.types.number,
-            password: hug.types.text,
+            user_id,
+            password,
             request,
             response,
-            authenticated_user: hug.directives.user):
+            authenticated_user):
         '''Updates a users' password'''
         try:
             found_user = self.session.query(
@@ -122,9 +125,13 @@ class NikonikoAPI:
         self.session.add(invalidated_token)
         self.session.commit()
         response.status = HTTP_204
+    update_password.__annotations__ = {
+        'user_id': hug.types.number,
+        'password': hug.types.text,
+        'authenticated_user': hug.directives.user}
 
-    def get_user(self, user_id: hug.types.number, response,
-                 authenticated_user: hug.directives.user):
+    def get_user(self, user_id, response,
+                 authenticated_user):
         '''Returns a user'''
         self.logger.debug(
             'Authenticated user reported: %s', authenticated_user)
@@ -140,12 +147,15 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return USER_SCHEMA.dump(res).data
+    get_user.__annotations__ = {
+        'user_id': hug.types.number,
+        'authenticated_user': hug.directives.user}
 
     def get_user_profile(
             self,
-            user_id: hug.types.number,
+            user_id,
             response,
-            authenticated_user: hug.directives.user):
+            authenticated_user):
         '''Returns a user profile'''
         self.logger.debug(
             'Authenticated user reported: %s', authenticated_user)
@@ -156,16 +166,19 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return USERPROFILE_SCHEMA.dump(res).data
+    get_user_profile.__annotations__ = {
+        'user_id': hug.types.number,
+        'authenticated_user': hug.directives.user}
 
     def patch_user_profile(  # pylint: disable=too-many-arguments
             self,
-            user_id: hug.types.number,
-            name: hug.types.text,
-            email: hug.types.text,
-            password: hug.types.text,
+            user_id,
+            name,
+            email,
+            password,
             request,
             response,
-            authenticated_user: hug.directives.user):
+            authenticated_user):
         '''Patches a user's data'''
         self.logger.debug(
             'User profile patch: <<"%s", "%s", "%s">>',
@@ -200,6 +213,12 @@ class NikonikoAPI:
         except InvalidRequestError:
             response.status = HTTP_403
             return "User profile not updated"
+    patch_user_profile.__annotations__ = {
+        'user_id': hug.types.number,
+        'name': hug.types.text,
+        'email': hug.types.text,
+        'password': hug.types.text,
+        'authenticated_user': hug.directives.user}
 
     def invalidate_token(self, token):
         '''Invalidates an authentication token in the DB'''
@@ -208,7 +227,7 @@ class NikonikoAPI:
             timestamp_invalidated=datetime.datetime.now())
         self.session.add(invalidated_token)
 
-    def get_person(self, person_id: hug.types.number, response):
+    def get_person(self, person_id, response):
         '''Returns a person'''
         try:
             res = self.session.query(
@@ -217,13 +236,15 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return PERSON_SCHEMA.dump(res).data
+    get_person.__annotations__ = {
+        'person_id': hug.types.number}
 
     def people(self):
         '''Returns all the people'''
         res = self.session.query(Person).all()
         return PEOPLE_SCHEMA.dump(res).data
 
-    def board(self, board_id: hug.types.number, response):
+    def board(self, board_id, response):
         '''Returns a board'''
         try:
             res = self.session.query(Board).filter_by(board_id=board_id).one()
@@ -238,6 +259,8 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return BOARD_SCHEMA.dump(res).data
+    board.__annotations__ = {
+        'board_id': hug.types.number}
 
     def get_boards(self):
         '''Returns all boards'''
@@ -246,9 +269,9 @@ class NikonikoAPI:
 
     def get_reported_feeling(
             self,
-            board_id: hug.types.number,
-            person_id: hug.types.number,
-            date: hug.types.text,
+            board_id,
+            person_id,
+            date,
             response):
         '''Returns a specific reported feeling for a board, person and date'''
         try:
@@ -260,13 +283,17 @@ class NikonikoAPI:
             response.status = HTTP_404
             return None
         return REPORTEDFEELING_SCHEMA.dump(res).data
+    get_reported_feeling.__annotations__ = {
+        'board_id': hug.types.number,
+        'person_id': hug.types.number,
+        'date': hug.types.text}
 
     def create_reported_feeling(
             self,
-            board_id: hug.types.number,
-            person_id: hug.types.number,
-            feeling: hug.types.text,
-            date: hug.types.text):
+            board_id,
+            person_id,
+            feeling,
+            date):
         '''Creates a new reported_feeling'''
         try:
             reported_feeling = self.session.query(ReportedFeeling).filter_by(
@@ -285,6 +312,11 @@ class NikonikoAPI:
             self.session.add(reported_feeling)
         self.session.commit()
         return REPORTEDFEELING_SCHEMA.dump(reported_feeling).data
+    create_reported_feeling.__annotations__ = {
+        'board_id': hug.types.number,
+        'person_id': hug.types.number,
+        'feeling': hug.types.text,
+        'date': hug.types.text}
 
     def __init__(
             self,

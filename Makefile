@@ -11,8 +11,8 @@ PIP := $(VENV)/bin/pip
 JWT_SECRET_KEY := fake-secret-key
 export JWT_SECRET_KEY
 
-DEFAULT_PYTHON := /usr/local/bin/python3
-VIRTUALENV := /usr/local/bin/virtualenv
+DEFAULT_PYTHON := $(shell which python3)
+VIRTUALENV := $(shell which virtualenv)
 
 REQUIREMENTS := -r requirements.txt
 
