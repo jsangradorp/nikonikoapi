@@ -1,4 +1,5 @@
 - Proper release procedure
+- Add a LICENSE file as per https://packaging.python.org/tutorials/distributing-packages/#license-txt
 - Align spec with implementation
 - Implement confirmation of email change
 - Backoffice
