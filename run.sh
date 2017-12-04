@@ -20,3 +20,5 @@ else
     local-ssl-proxy --source 8443 --target 8080 --cert localhost.crt --key localhost.key & proxypid=$!
 fi
 uwsgi --pythonpath ./.venv/lib/python3.6/site-packages --logformat '%(addr) - %(user) [%(ltime)] "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"' --enable-threads $SOCKET_OPTS --wsgi-file nikoniko/api.py --callable __hug_wsgi__
+
+# alternative: JWT_SECRET_KEY="jhjh" uwsgi --pythonpath ./.venv/lib/python3.6/site-packages --logformat '%(addr) - %(user) [%(ltime)] "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"' --enable-threads --http :8080 --module nikoniko.api --callable __hug_wsgi__
