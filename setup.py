@@ -19,7 +19,7 @@ setup(
     author_email='jsangradorp@gmail.com',
     url='https://github.com/jsangradorp/nikonikoapi',
     license=license,
-    install_requires=['bcrypt', 'hug', 'sqlalchemy', 'marshmallow', 'jwt'],
+    install_requires=['bcrypt', 'hug', 'sqlalchemy', 'marshmallow', 'pyjwt', 'psycopg2'],
     packages=find_packages(exclude=('tests', 'docs'))
 )
 
