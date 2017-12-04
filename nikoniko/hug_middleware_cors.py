@@ -13,9 +13,9 @@ class CORSMiddleware(object):
     def __init__(
             self,
             api,
-            allow_origins=None,
-            allow_credentials=True,
-            max_age=None):
+            allow_origins: list = None,
+            allow_credentials: bool = True,
+            max_age: int = None):
         ''' Initialize the middleware '''
         if allow_origins is None:
             allow_origins = ['*']
@@ -23,10 +23,6 @@ class CORSMiddleware(object):
         self.allow_origins = allow_origins
         self.allow_credentials = allow_credentials
         self.max_age = max_age
-    __init__.__annotations__ = {
-        'allow_origins': list,
-        'allow_credentials': bool,
-        'max_age': int}
 
     def match_route(self, reqpath):
         """match a request with parameter to it's corresponding route"""
