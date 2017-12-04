@@ -11,7 +11,8 @@ with open('LICENSE') as f:
 
 setup(
     name='nikoniko',
-    version='0.0.0',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     description='Nikoniko API',
     long_description=readme,
     author='Julio Sangrador-Paton',
