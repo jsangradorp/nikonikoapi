@@ -1,0 +1,3 @@
+__file /etc/cdist-configured
+__package python3-pip
+

@@ -8,3 +8,6 @@ __pycache__
 /.idea/
 /.coverage
 /htmlcov/
+/nikoniko.egg-info/
+/dist/
+/.eggs/
