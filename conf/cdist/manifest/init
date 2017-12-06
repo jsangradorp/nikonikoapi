@@ -1,3 +1,11 @@
 __file /etc/cdist-configured
-__package python3-pip
 
+__package build-essential
+__package python3-dev
+__package python3-pip
+__package python3-setuptools
+
+FILENAME=$(cd dist && ls -x nikoniko*.whl)
+__staged_file ${FILENAME} --source dist/${FILENAME} --cksum "$(cat dist/checksum)" --fetch-command 'cat "%s"'
+require="__package/python3-pip __package/python3-setuptools __staged_file/${FILENAME}" __package_pip ${FILENAME} --pip /usr/bin/pip3 --name /${FILENAME}
+require="__package/python3-pip __package/python3-setuptools __package/build-essential" __package_pip uwsgi --pip /usr/bin/pip3
