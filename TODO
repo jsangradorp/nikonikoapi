@@ -1,3 +1,4 @@
+- Properly set logging level as per environment and with a sensible default
 - Align spec with implementation
 - Implement confirmation of email change
 - Backoffice
@@ -5,7 +6,6 @@
   - Allow access with said
 - Add authorization to the spec definition
 - Make it multi tenant
-- Properly set logging level as per environment and with a sensible default
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
 - Add catchall route and respond 404 (or)
