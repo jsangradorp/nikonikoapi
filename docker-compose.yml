@@ -12,9 +12,6 @@ services:
             args:
                 dbhost: postgres
                 dbuser: nikoniko
-        depends_on:
-            postgres:
-                condition: service_started
         expose:
             - "8080"
         ports:
