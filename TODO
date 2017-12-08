@@ -1,5 +1,3 @@
-- Proper release procedure
-- Retry DB connect
 - Align spec with implementation
 - Implement confirmation of email change
 - Backoffice
