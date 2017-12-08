@@ -1,9 +1,12 @@
 ''' Definition of ORM objects for the Nikoniko boards API '''
 import logging
+import time
+
 from sqlalchemy import Column, Integer, String, Date, DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
@@ -24,6 +27,17 @@ class DB:  # pylint: disable=too-few-public-methods
             db_connstring,
             echo=echo)
         self.session = sessionmaker(bind=self.engine)
+        connected = False
+        tries = 100
+        while not connected:
+            try:
+                self.engine.execute("SELECT 1")
+                connected = True
+            except OperationalError:
+                tries -= 1
+                time.sleep(.1)
+                if not tries:
+                    raise
 
     def create_all(self):
         ''' create tables in DB '''
