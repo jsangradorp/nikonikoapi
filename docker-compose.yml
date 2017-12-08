@@ -1,0 +1,36 @@
+version: '2.0'
+services:
+    postgres:
+        image: postgres:latest
+        networks:
+            - internalnetwork
+        expose:
+          - "5432"
+        ports:
+          - "5433:5432"
+
+    #   zookeeper:
+    #     image: "containers.schibsted.io/storage/zookeeper:latest"
+    #     mem_limit: 512000000
+    #     ports:
+    #       - "2181:2181"
+    #     command: "/etc/init.d/zookeeper start-foreground"
+    #     networks:
+    #       - internalnetwork
+    # 
+    #   kafka:
+    #     build: kafka
+    #     privileged: true
+    #     ports:
+    #       - "9092:9092"
+    #     links:
+    #       - zookeeper
+    #     environment:
+    #      - "zookeeper_hosts=zookeeper:2181"
+    #      - KAFKA_HEAP_OPTS=-Xmx256m -Xms128m
+    #     networks:
+    #       - internalnetwork
+
+networks:
+  internalnetwork:
+    driver: bridge
