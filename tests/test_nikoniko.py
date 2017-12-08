@@ -12,6 +12,7 @@ from falcon import HTTP_401
 from falcon import HTTP_404
 from falcon import Request
 from falcon.testing import StartResponseMock, create_environ
+from sqlalchemy.exc import OperationalError
 
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
@@ -162,12 +163,20 @@ def authenticated_user(user1):
 
 
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
-                         "user2", "authenticated_user")
+                         "user2", "authenticated_user", "monkeypatch")
 class TestAPI(object):  # pylint: disable=no-self-use
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
     boardLabel2 = "Sabadell"
+
+    def test_connection_retry(self, monkeypatch):
+        # Given
+        # When
+        monkeypatch.setattr('time.sleep', lambda x: None)
+        # Then
+        with pytest.raises(OperationalError):
+            DB('postgresql://postgres@127.0.0.1:0/nodb', echo=False)
 
     def test_login_ok(self, api, user1):
         # Given
