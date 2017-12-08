@@ -1,4 +1,4 @@
-version: '2.0'
+version: '2.1'
 services:
     postgres:
         image: postgres:latest
@@ -10,11 +10,25 @@ services:
         build:
             context: .
             args:
-                dbhost: postgres
-                dbuser: nikoniko
-        expose:
-            - "8080"
-        ports:
-            - "8080:8080"
+                dbhost: ${DB_HOST:-postgres}
+                dbuser: ${DB_USERNAME:-nikoniko}
+        environment:
+            - DO_BOOTSTRAP_DB=${DO_BOOTSTRAP_DB:-0}
+            - JWT_SECRET_KEY
         links:
             - postgres
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./conf/nginx/nikonikoapi.conf:/etc/nginx/conf.d/nikonikoapi.conf
+            - ./conf/nginx/localhost.key:/etc/nginx/localhost.key
+            - ./conf/nginx/localhost.crt:/etc/nginx/localhost.crt
+            - ./conf/nginx/uwsgi_params:/etc/nginx/uwsgi_params
+              # to generate, `openssl dhparam -out dhparams.pem 2048`
+            - ./conf/nginx/dhparams.pem:/etc/nginx/dhparams.pem
+        expose:
+            - "443"
+        ports:
+            - "8443:443"
+        links:
+            - nikonikoapi
