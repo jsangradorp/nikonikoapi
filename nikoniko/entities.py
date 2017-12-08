@@ -1,5 +1,4 @@
 ''' Definition of ORM objects for the Nikoniko boards API '''
-import logging
 import time
 
 from sqlalchemy import Column, Integer, String, Date, DateTime
@@ -12,9 +11,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
 from marshmallow import Schema, fields
-
-logging.basicConfig(level=logging.DEBUG)
-LOGGER = logging.getLogger(__name__)
 
 
 class DB(object):  # pylint: disable=too-few-public-methods
