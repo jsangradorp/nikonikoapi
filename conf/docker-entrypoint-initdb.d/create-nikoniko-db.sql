@@ -1,0 +1,3 @@
+CREATE USER nikoniko;
+CREATE DATABASE nikoniko;
+GRANT ALL PRIVILEGES ON DATABASE nikoniko TO nikoniko;
