@@ -176,7 +176,7 @@ class TestAPI(object):  # pylint: disable=no-self-use
         monkeypatch.setattr('time.sleep', lambda x: None)
         # Then
         with pytest.raises(OperationalError):
-            DB('postgresql://postgres@127.0.0.1:0/nodb', echo=False)
+            DB('postgresql://postgres@127.0.0.1:1/nodb', echo=False)
 
     def test_login_ok(self, api, user1):
         # Given

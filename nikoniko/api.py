@@ -87,10 +87,16 @@ def bootstrap_db(session):
         session.rollback()
 
 
+LOG_LEVEL = getattr(logging, os.getenv('LOGLEVEL', 'INFO').upper())
+if not isinstance(LOG_LEVEL, int):
+    raise ValueError('Invalid log level: {}'.format(LOG_LEVEL))
 LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.DEBUG)
+LOGGER.setLevel(LOG_LEVEL)
+LOGGER.info('Log level set to %s', LOG_LEVEL)
 
-NIKONIKODB = DB(db_connstring_from_environment(LOGGER), echo=True)
+NIKONIKODB = DB(
+    db_connstring_from_environment(LOGGER),
+    echo=(LOGGER.isEnabledFor(logging.DEBUG)))
 NIKONIKODB.create_all()
 SESSION = NIKONIKODB.session()
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception

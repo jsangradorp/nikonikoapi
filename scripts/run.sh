@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# DO_BOOTSTRAP_DB=true JWT_SECRET_KEY=pp LOCAL=y ./scripts/run.sh
+# DO_BOOTSTRAP_DB=true JWT_SECRET_KEY=pp LOCAL=y LOGLEVEL=DEBUG ./scripts/run.sh
 
 cd $(dirname $0)/..
 

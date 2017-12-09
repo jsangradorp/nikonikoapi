@@ -1,4 +1,3 @@
-- Properly set logging level as per environment and with a sensible default
 - Align spec with implementation
 - Implement confirmation of email change
 - Backoffice
