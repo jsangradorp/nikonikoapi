@@ -482,4 +482,4 @@ class TestAPI(object):  # pylint: disable=no-self-use
         # Then
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
-                          " password for requested user")
+                          " profile for requested user")

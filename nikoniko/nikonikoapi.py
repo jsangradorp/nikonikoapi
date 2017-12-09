@@ -185,7 +185,7 @@ class NikonikoAPI:
         if user_id != authenticated_user['user']:
             response.status = HTTP_401
             return ('Authenticated user isn\'t allowed to update'
-                    ' the password for requested user')
+                    ' the profile for requested user')
         if name:
             found_user.name = name
         if email:
@@ -196,6 +196,7 @@ class NikonikoAPI:
         try:
             self.session.add(found_user)
             self.session.commit()
+            response.status = HTTP_204
             return USERPROFILE_SCHEMA.dump(found_user).data
         except InvalidRequestError:
             response.status = HTTP_403

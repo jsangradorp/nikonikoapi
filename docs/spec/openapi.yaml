@@ -2,11 +2,17 @@ openapi: '3.0.0'
 info:
   title: Nikoniko boards API
   description: 'Manage Nikoniko boards and users'
-  version: v3
+  version: v1
 servers:
 - url: 'https://api.nikonikoboards.com'
   description: 'Main Nikoniko Boards API URL'
 components:
+  securitySchemes:
+    user_token:
+      type: http
+      description: 'self-provided token-based authentication/authorization'
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     UserType:
       type: object
@@ -24,6 +30,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BoardType'
+    UserProfileType:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
     BoardType:
       type: object
       properties:
@@ -124,6 +140,14 @@ components:
           "name": "John Smith",
           "user_id": 1
         }
+    RetrievedUserProfileExample:
+      summary: 'Example of a user profile data'
+      value: |
+        {
+          "email": "john@example.com",
+          "name": "John Smith",
+          "user_id": 1
+        }
     RetrievedBoardExample:
       summary: 'Example of a board data'
       value: |
@@ -163,7 +187,7 @@ paths:
   '/login':
     summary: 'Identify yourself to the API'
     post:
-      summary: 'Identify yourself through user and password'
+      summary: 'Identify yourself through email and password'
       requestBody:
         required: true
         content:
@@ -220,15 +244,16 @@ paths:
                     description: 'Identifier of the identified user'
                   person:
                     type: integer
-                    description: 'Identifier of the person associated with the user, if any'
-                    required: false
+                    description: 'Identifier of the person associated with the user'
                   token:
                     type: string
                     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoiMjAxNy0wOC0xOVQxODozNjo1NC42NTcyMzciLCJ1c2VyIjoyLCJleHAiOjE1MDMyNDcwMTQuNjU3MjM3fQ.cIxYz0GrI-zn-Kx8XBT1TrbLaXgyNRd2gLMxLpqRYMo'
-  /password/{user_id}:
+  '/password/{user_id}':
     summary: 'Manage a users password'
     put:
       summary: 'Update a users password'
+      security:
+        user_token: []
       parameters:
         user_id:
           in: path
@@ -280,6 +305,8 @@ paths:
     summary: 'Manage specific users of the API'
     get:
       summary: 'Retrieve a specific user'
+      security:
+        user_token: []
       parameters:
       - name: userId
         description: 'identifier of the user we want to retrieve'
@@ -298,16 +325,94 @@ paths:
                 $ref: '#/components/schemas/UserType'
               examples:
               - $ref: '#/components/examples/RetrievedUserExample'
+  '/userProfiles/{userId}':
+    summary: 'Manage specific user profiles of the API'
+    get:
+      summary: 'Retrieve a specific user profile'
+      security:
+        user_token: []
+      parameters:
+      - name: userId
+        description: 'identifier of the user for which we want to retrieve the profile'
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '404':
+          description: 'User not found'
+        '200':
+          description: 'User found, profile in response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileType'
+              examples:
+              - $ref: '#/components/examples/RetrievedUserProfileExample'
+    patch:
+      summary: 'Update a user profile'
+      security:
+        user_token: []
+      parameters:
+        userId:
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+            example: |
+              {
+                "name": "John Smith",
+                "email": "john@example.com",
+                "password": "myshinynewpassword"
+              }
+      responses:
+        '400':
+          description: 'Error: Bad request: missing parameter/s'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: string
+                example: |
+                  {
+                    "errors": {
+                      "password": "Required parameter 'password' not supplied"
+                    }
+                  }
+        '401':
+          description: 'Error: Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: string
+                example: '"Authenticated user isn''t allowed to update the profile for requested user"'
+        '204':
+          description: 'Profile succesfully updated'
   '/people':
     summary: 'Manage people involved in boards'
     get:
-      summary: 'Retrieve people, optionally filtering by membership to a specific board'
-      parameters:
-      - name: inBoard
-        description: 'board which retrieved people must be members of, otherwise retrieve all people registered in the system'
-        in: query
-        schema:
-          type: integer
+      summary: 'Retrieve all of the people'
+      security:
+        user_token: []
       responses:
         '200':
           description: 'List of requested people to be returned (can be empty)'
@@ -330,19 +435,8 @@ paths:
         type: integer
     get:
       summary: 'Retrieve a specific board'
-      parameters:
-      - name: fromDate
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
-      - name: toDate
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
+      security:
+        user_token: []
       responses:
         '404':
           description: 'Board not found'
@@ -375,6 +469,8 @@ paths:
         format: date
     get:
       summary: 'Retrieve the reported feeling by a user about a board on a date'
+      security:
+        user_token: []
       responses:
         '404':
           description: 'Reported feeling not found'
@@ -388,6 +484,8 @@ paths:
               - $ref: '#/components/examples/ReportedFeelingExample'
     post:
       summary: 'Insert or update a reportedFeeling'
+      security:
+        user_token: []
       requestBody:
         required: true
         content:
