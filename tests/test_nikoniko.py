@@ -17,7 +17,7 @@ from sqlalchemy.exc import OperationalError
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
 from nikoniko.entities import InvalidatedToken
-from nikoniko.nikonikoapi import NikonikoAPI, checkpw
+from nikoniko.nikonikoapi import NikonikoAPI, check_password
 
 
 TESTLOGGER = logging.getLogger(__name__)
@@ -416,7 +416,7 @@ class TestAPI(object):  # pylint: disable=no-self-use
             authenticated_user)
         # Then
         user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
-        assert checkpw(user, "newpassword") is True
+        assert check_password(user, "newpassword") is True
         # When
         result = api.update_password(
             -1,

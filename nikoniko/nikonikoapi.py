@@ -43,7 +43,7 @@ def hash_password(password):
     return password_hash
 
 
-def checkpw(user, password):
+def check_password(user, password):
     '''Checks that a given password corresponds to a given user'''
     return bcrypt.checkpw(password.encode(), user.password_hash.encode())
 
@@ -70,7 +70,7 @@ class NikonikoAPI:
         '''Authenticates and returns a token'''
         try:
             user = self.session.query(User).filter_by(email=email).one()
-            if checkpw(user, password):
+            if check_password(user, password):
                 user = self.session.query(User).filter_by(email=email).one()
                 created = datetime.datetime.now()
                 return {
