@@ -1,4 +1,5 @@
 - Implement confirmation of email change
+- Consider using JSON for /login parameters instead of urlecoded
 - Backoffice
   - Generate and send reset-password link
   - Allow access with said
