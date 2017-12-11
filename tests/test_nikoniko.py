@@ -447,7 +447,6 @@ class TestAPI(object):  # pylint: disable=no-self-use
         result = api.patch_user_profile(
             user1.user_id,
             "newname",
-            "newemail@example.com",
             "newpassword",
             request,
             response,
@@ -456,13 +455,12 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert result == {
             "user_id": user1.user_id,
             "name": "newname",
-            "email": "newemail@example.com"
+            "email": "bob@example.com"
             }
         # When
         result = api.patch_user_profile(
             -1,
             "newname",
-            "newemail@example.com",
             "newpassword",
             request,
             response,
@@ -474,7 +472,6 @@ class TestAPI(object):  # pylint: disable=no-self-use
         result = api.patch_user_profile(
             user2.user_id,
             "newname",
-            "newemail@example.com",
             "newpassword",
             request,
             response,

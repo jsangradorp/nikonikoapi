@@ -161,16 +161,14 @@ class NikonikoAPI:
             self,
             user_id: hug.types.number,
             name: hug.types.text,
-            email: hug.types.text,
             password: hug.types.text,
             request,
             response,
             authenticated_user: hug.directives.user):
         '''Patches a user's data'''
         self.logger.debug(
-            'User profile patch: <<"%s", "%s", "%s">>',
+            'User profile patch: <<"%s", "%s">>',
             name,
-            email,
             password)
         self.logger.debug(
             'Authenticated user reported: %s', authenticated_user)
@@ -188,8 +186,6 @@ class NikonikoAPI:
                     ' the profile for requested user')
         if name:
             found_user.name = name
-        if email:
-            found_user.email = email
         if password:
             found_user.password_hash = hash_password(password)
             self.invalidate_token(request.headers['AUTHORIZATION'])

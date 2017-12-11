@@ -1,5 +1,5 @@
 
-Change email address.
+Change email address. DON'T
 
 - User logs in
 - User goes to user profile

@@ -368,16 +368,12 @@ paths:
               properties:
                 name:
                   type: string
-                email:
-                  type: string
-                  format: email
                 password:
                   type: string
                   format: password
             example: |
               {
                 "name": "John Smith",
-                "email": "john@example.com",
                 "password": "myshinynewpassword"
               }
       responses:
