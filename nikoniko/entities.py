@@ -9,6 +9,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql.expression import func
+from sqlalchemy_utils import UUIDType
 
 from marshmallow import Schema, fields
 
@@ -48,6 +50,14 @@ class InvalidatedToken(DB.base):  # pylint: disable=too-few-public-methods
         DateTime(timezone=True),
         nullable=False,
         index=True)
+
+
+class PasswordResetCode(DB.base):  # pylint: disable=too-few-public-methods
+    ''' Password reset code entity definition '''
+    __tablename__ = 'passwordresetcodes'
+    user_id = Column(Integer, ForeignKey('users.user_id'))
+    datetime = Column(DateTime, default=func.utc_timestamp())
+    code = Column(UUIDType, primary_key=True)
 
 
 class User(DB.base):  # pylint: disable=too-few-public-methods
