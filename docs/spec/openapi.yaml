@@ -499,3 +499,41 @@ paths:
                 $ref: '#/components/schemas/ReportedFeelingType'
               examples:
               - $ref: '#/components/examples/ReportedFeelingExample'
+  '/passwordResetCode':
+    summary: 'Email the user a password reset code'
+    post:
+      summary: 'Request a password request code to be received in the email'
+      requestBody:
+        required: true
+        content:
+          'application/x-www-form-urlencoded; charset=UTF-8':
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+            encoding:
+              email:
+                style: form
+            example: 'email=john@example.com'
+      responses:
+        '400':
+          description: 'Error: Bad request: missing parameter/s'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: string
+                example: |
+                  {
+                    "errors": {
+                      "email": "Required parameter 'email' not supplied"
+                    }
+                  }
+        '200':
+          description: 'Password reset code has been generated and sent'
