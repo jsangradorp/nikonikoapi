@@ -1,20 +1,3 @@
-
-Change email address. DON'T
-
-- User logs in
-- User goes to user profile
-- User edits email address
-- frontend sends password change to API (along with URL template or callback)
-- API stores new email in DB, 'email-change-requests' table.
-- API send email with link to verify change to new email. Code also in requests table, along with "old" token and expiry of the verification code.
-- User receives email, follows the link. (/verify-email/XXXXXXXXXXXXXXX).
-- API checks unexpired, does the update to the user profile, invalidates the token and deletes the request.
-- Otherwise reports nonvalidity of the verification code. (non-authenticated page)
-
-Send reset link.
-
-Link to only reset the password or link that allows login (and then possibly change password)?
-
 Reset password:
 
 - Frontend invokes "/createresetpasswordcode", (parameter: URL template for
