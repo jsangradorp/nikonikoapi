@@ -25,6 +25,10 @@ class DB(object):  # pylint: disable=too-few-public-methods
             db_connstring,
             echo=echo)
         self.session = sessionmaker(bind=self.engine)
+        self.connect()
+
+    def connect(self):
+        ''' Retry initial connection to the DB a number of times '''
         connected = False
         tries = 100
         while not connected:
