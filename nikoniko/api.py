@@ -43,6 +43,16 @@ def db_connstring_from_environment(logger=logging.getLogger(__name__)):
     return db_connstring
 
 
+def mailer_config_from_environment():
+    ''' Calculate and return mailer configuration based on environment '''
+    return dict(
+        server=os.getenv('MAILER_HOST', 'localhost'),
+        port=os.getenv('MAILER_PORT', 25),
+        user=os.getenv('MAILER_USER', 'coral@example.com'),
+        password=os.getenv('MAILER_PASSWORD', 'mailerpassword'),
+        sender=os.getenv('MAILER_SENDER', 'noreply@nikonikoboards.com'))
+
+
 def bootstrap_db(session):
     ''' Fill in the DB with initial data '''
     one_person = Person(person_id=1, label='Ann')
@@ -106,5 +116,15 @@ if os.getenv('DO_BOOTSTRAP_DB', 'false').lower() in [
     LOGGER.info('Bootstrapping DB')
     bootstrap_db(SESSION)
 
-NIKONIKOAPI = NikonikoAPI(hug.API(__name__), SESSION, SECRET_KEY, LOGGER)
+MAILCONFIG = mailer_config_from_environment()
+
+CONFIG = dict(
+    secret_key=SECRET_KEY,
+    mailconfig=MAILCONFIG,
+    logger=LOGGER)
+
+NIKONIKOAPI = NikonikoAPI(
+    hug.API(__name__),
+    SESSION,
+    CONFIG)
 NIKONIKOAPI.setup()

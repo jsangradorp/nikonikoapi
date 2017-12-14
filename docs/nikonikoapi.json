@@ -69,6 +69,20 @@
                 "usage": "Updates a users' password"
             }
         },
+        "/passwordResetCode": {
+            "POST": {
+                "inputs": {
+                    "email": {
+                        "type": "Basic text / string value"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "usage": " create a password reset code and send it to the user if exists "
+            }
+        },
         "/people": {
             "GET": {
                 "examples": [
@@ -166,9 +180,6 @@
             },
             "PATCH": {
                 "inputs": {
-                    "email": {
-                        "type": "Basic text / string value"
-                    },
                     "name": {
                         "type": "Basic text / string value"
                     },

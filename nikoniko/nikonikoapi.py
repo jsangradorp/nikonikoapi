@@ -4,6 +4,7 @@ Provide an API to manage happiness logs (nikoniko) for teams
 import datetime
 import logging
 import uuid
+
 from smtplib import SMTP
 
 import hug
@@ -49,16 +50,6 @@ def hash_password(password):
 def check_password(user, password):
     '''Checks that a given password corresponds to a given user'''
     return bcrypt.checkpw(password.encode(), user.password_hash.encode())
-
-
-def email_password_reset_code(email, code):
-    ''' Emails a uuid code to an email '''
-    server = SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login("maileruser@smtp.example.com", "XXXXXXXXXXX")
-    # server = SMTP('localhost', 25)
-    server.sendmail('noreply@nikonikoboards.com', email, code)
-    server.quit()
 
 
 class NikonikoAPI:
@@ -113,9 +104,21 @@ class NikonikoAPI:
                 code=code)
             self.session.add(code_object)
             self.session.commit()
-            email_password_reset_code(user.email, uuid.uuid4())
+            self.email_password_reset_code(user.email, uuid.uuid4())
         except NoResultFound as exception:
             self.logger.warning(exception)
+
+    def email_password_reset_code(self, email, code):
+        ''' Emails a uuid code to an email '''
+        self.sendmail(email, code)
+
+    def sendmail(self, receiver, message):
+        ''' send an email to a receiver '''
+        server = SMTP(self.mailconfig['server'], self.mailconfig['port'])
+        server.starttls()
+        server.login(self.mailconfig['user'], self.mailconfig['password'])
+        server.sendmail(self.mailconfig['sender'], receiver, message)
+        server.quit()
 
     def update_password(  # pylint: disable=too-many-arguments
             self,
@@ -313,12 +316,12 @@ class NikonikoAPI:
             self,
             api,
             session,
-            secret_key,
-            logger=NULL_LOGGER):
+            config):
         self.api = api
         self.session = session
-        self.secret_key = secret_key
-        self.logger = logger
+        self.secret_key = config['secret_key']
+        self.mailconfig = config['mailconfig']
+        self.logger = config['logger']
 
     def setup(self):
         '''Set up endpoints and CORS middleware'''

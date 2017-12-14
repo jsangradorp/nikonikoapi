@@ -8,8 +8,16 @@ from nikoniko.nikonikoapi import NikonikoAPI
 NIKONIKOAPI = NikonikoAPI(
     hug.API(__name__),
     None,
-    None,
-    None)
+    config=dict(
+        secret_key='',
+        mailconfig=dict(
+            server=None,
+            port=None,
+            user=None,
+            password=None,
+            sender=None),
+        logger=None
+    ))
 NIKONIKOAPI.setup()
 print(
     json.dumps(

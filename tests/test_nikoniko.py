@@ -2,6 +2,7 @@
 import logging
 import datetime
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -19,7 +20,6 @@ from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
 from nikoniko.entities import InvalidatedToken
 from nikoniko.nikonikoapi import NikonikoAPI, check_password
-from nikoniko import nikonikoapi
 
 TESTLOGGER = logging.getLogger(__name__)
 TESTDB = DB('sqlite:///:memory:', echo=False)
@@ -27,6 +27,12 @@ TESTDB.create_all()
 TESTSESSION = TESTDB.session()
 TESTENGINE = TESTDB.engine
 TESTAPI = hug.API(__name__)
+TESTMAILER = dict(
+    server=None,
+    port=None,
+    user=None,
+    password=None,
+    sender=None)
 
 SECRET_KEY = os.environ['JWT_SECRET_KEY']  # may purposefully throw exception
 TOKEN_OBJECT = {
@@ -39,7 +45,15 @@ TOKEN = jwt.encode(
     algorithm='HS256'
 ).decode()
 
-NIKONIKOAPI = NikonikoAPI(TESTAPI, TESTSESSION, SECRET_KEY, TESTLOGGER)
+TESTCONFIG = dict(
+    secret_key=SECRET_KEY,
+    mailconfig=TESTMAILER,
+    logger=TESTLOGGER)
+
+NIKONIKOAPI = NikonikoAPI(
+    TESTAPI,
+    TESTSESSION,
+    TESTCONFIG)
 NIKONIKOAPI.setup()
 
 
@@ -65,9 +79,10 @@ def api():
     return NikonikoAPI(
         api=TESTAPI,
         session=TESTSESSION,
-        secret_key=SECRET_KEY,
-        logger=TESTLOGGER
-        )
+        config=dict(
+            secret_key=SECRET_KEY,
+            mailconfig=TESTMAILER,
+            logger=TESTLOGGER))
 
 
 @pytest.fixture()
@@ -483,22 +498,24 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert result == ("Authenticated user isn't allowed to update the"
                           " profile for requested user")
 
-    def test_password_reset_code(self, api, user1, mocker, monkeypatch):
+    @patch('nikoniko.nikonikoapi.SMTP')
+    def test_password_reset_code(  # pylint: disable=unused-argument
+            self,
+            smtp_mock,
+            api,
+            user1,
+            mocker):
         # Given
-        monkeypatch.setattr(
-            nikonikoapi,
-            'email_password_reset_code',
-            lambda x, y: None)
-        mocker.spy(nikonikoapi, 'email_password_reset_code')
+        mocker.spy(api, 'email_password_reset_code')
         # When
         api.password_reset_code("another@example.com")
         # Then
         assert (
-            nikonikoapi.email_password_reset_code  # pylint: disable=no-member
+            api.email_password_reset_code  # pylint: disable=no-member
             .call_count == 0)
         # When
         api.password_reset_code(user1.email)
         # Then
         assert (
-            nikonikoapi.email_password_reset_code  # pylint: disable=no-member
+            api.email_password_reset_code  # pylint: disable=no-member
             .call_count == 1)
