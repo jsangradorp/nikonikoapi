@@ -1,5 +1,5 @@
-- Implement confirmation of email change
-- Consider using JSON for /login parameters instead of urlecoded
+- Make the sending of emails actually work
+- Separate asserts in separate test functions
 - Backoffice
   - Generate and send reset-password link
   - Allow access with said
@@ -7,3 +7,4 @@
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
 - Add catchall route and respond 404 (or)
+- Consider using JSON for /login parameters instead of urlecoded

@@ -3,6 +3,8 @@ Provide an API to manage happiness logs (nikoniko) for teams
 """
 import datetime
 import logging
+import uuid
+from smtplib import SMTP
 
 import hug
 import jwt
@@ -21,6 +23,7 @@ from nikoniko.entities import Person, PERSON_SCHEMA, PEOPLE_SCHEMA
 from nikoniko.entities import Board, BOARD_SCHEMA, BOARDS_SCHEMA
 from nikoniko.entities import ReportedFeeling, REPORTEDFEELING_SCHEMA
 from nikoniko.entities import InvalidatedToken
+from nikoniko.entities import PasswordResetCode
 
 from nikoniko.hug_middleware_cors import CORSMiddleware
 
@@ -48,6 +51,16 @@ def check_password(user, password):
     return bcrypt.checkpw(password.encode(), user.password_hash.encode())
 
 
+def email_password_reset_code(email, code):
+    ''' Emails a uuid code to an email '''
+    server = SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login("maileruser@smtp.example.com", "XXXXXXXXXXX")
+    # server = SMTP('localhost', 25)
+    server.sendmail('noreply@nikonikoboards.com', email, code)
+    server.quit()
+
+
 class NikonikoAPI:
     '''Wrapper around hug API for initialization, testing, etc.'''
     def token_verify(self, token):
@@ -71,7 +84,6 @@ class NikonikoAPI:
         try:
             user = self.session.query(User).filter_by(email=email).one()
             if check_password(user, password):
-                user = self.session.query(User).filter_by(email=email).one()
                 created = datetime.datetime.now()
                 return {
                     'user': user.user_id,
@@ -90,6 +102,21 @@ class NikonikoAPI:
             return return_unauthorised(response, email)
         except NoResultFound as exception:
             return return_unauthorised(response, email, exception)
+
+    def password_reset_code(self, email: hug.types.text):
+        ''' create a password reset code and send it to the user if exists '''
+        try:
+            user = self.session.query(User).filter_by(email=email).one()
+            code = uuid.uuid4()
+            code_object = PasswordResetCode(
+                user_id=user.user_id,
+                code=code,
+                datetime=datetime.datetime.now())
+            self.session.add(code_object)
+            self.session.commit()
+            email_password_reset_code(user.email, uuid.uuid4())
+        except NoResultFound as exception:
+            self.logger.warning(exception)
 
     def update_password(  # pylint: disable=too-many-arguments
             self,
@@ -306,6 +333,7 @@ class NikonikoAPI:
     def setup_endpoints(self):
         '''Assign methods to endpoints'''
         hug.post('/login', api=self.api)(self.login)
+        hug.post('/passwordResetCode', api=self.api)(self.password_reset_code)
         token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter
                 self.token_verify)

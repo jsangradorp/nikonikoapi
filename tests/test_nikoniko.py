@@ -2,6 +2,7 @@
 import logging
 import datetime
 import os
+
 import pytest
 
 import bcrypt
@@ -18,7 +19,7 @@ from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
 from nikoniko.entities import InvalidatedToken
 from nikoniko.nikonikoapi import NikonikoAPI, check_password
-
+from nikoniko import nikonikoapi
 
 TESTLOGGER = logging.getLogger(__name__)
 TESTDB = DB('sqlite:///:memory:', echo=False)
@@ -163,7 +164,8 @@ def authenticated_user(user1):
 
 
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
-                         "user2", "authenticated_user", "monkeypatch")
+                         "user2", "authenticated_user", "monkeypatch",
+                         "mocker")
 class TestAPI(object):  # pylint: disable=no-self-use
     personLabel1 = "Julio"
     personLabel2 = "Marc"
@@ -480,3 +482,23 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
                           " profile for requested user")
+
+    def test_password_reset_code(self, api, user1, mocker, monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            nikonikoapi,
+            'email_password_reset_code',
+            lambda x, y: None)
+        mocker.spy(nikonikoapi, 'email_password_reset_code')
+        # When
+        api.password_reset_code("another@example.com")
+        # Then
+        assert (
+            nikonikoapi.email_password_reset_code  # pylint: disable=no-member
+            .call_count == 0)
+        # When
+        api.password_reset_code(user1.email)
+        # Then
+        assert (
+            nikonikoapi.email_password_reset_code  # pylint: disable=no-member
+            .call_count == 1)

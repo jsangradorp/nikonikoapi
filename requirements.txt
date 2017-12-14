@@ -12,3 +12,4 @@ pytest-coverage==0.0
 typing==3.6.2
 cdist==4.7.3
 SQLAlchemy-Utils==0.32.21
+pytest-mock==1.6.3
