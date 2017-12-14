@@ -60,7 +60,7 @@ class PasswordResetCode(DB.base):  # pylint: disable=too-few-public-methods
     ''' Password reset code entity definition '''
     __tablename__ = 'passwordresetcodes'
     user_id = Column(Integer, ForeignKey('users.user_id'))
-    datetime = Column(DateTime, default=func.utc_timestamp())
+    datetime = Column(DateTime, default=func.now())
     code = Column(UUIDType, primary_key=True)
 
 

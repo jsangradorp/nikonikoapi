@@ -110,8 +110,7 @@ class NikonikoAPI:
             code = uuid.uuid4()
             code_object = PasswordResetCode(
                 user_id=user.user_id,
-                code=code,
-                datetime=datetime.datetime.now())
+                code=code)
             self.session.add(code_object)
             self.session.commit()
             email_password_reset_code(user.email, uuid.uuid4())
