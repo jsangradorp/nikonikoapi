@@ -1,8 +1,4 @@
-- Make the sending of emails actually work
 - Separate asserts in separate test functions
-- Backoffice
-  - Generate and send reset-password link
-  - Allow access with said
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
