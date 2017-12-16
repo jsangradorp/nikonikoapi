@@ -3,6 +3,7 @@ import logging
 import datetime
 import os
 from unittest.mock import patch
+from smtplib import SMTPException
 
 import pytest
 
@@ -14,7 +15,7 @@ from falcon import HTTP_401
 from falcon import HTTP_404
 from falcon import Request
 from falcon.testing import StartResponseMock, create_environ
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import InvalidRequestError, OperationalError
 
 from nikoniko.entities import DB, Person, \
         Board, ReportedFeeling, User, MEMBERSHIP
@@ -456,7 +457,13 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert result == ("Authenticated user isn't allowed to update the"
                           " password for requested user")
 
-    def test_patch_user_profile(self, api, user1, user2, authenticated_user):
+    def test_patch_user_profile(  # pylint: disable=too-many-arguments
+            self,
+            api,
+            user1,
+            user2,
+            authenticated_user,
+            mocker):
         # Given
         response = StartResponseMock()
         request = Request(create_environ(headers={'AUTHORIZATION': 'XXXX'}))
@@ -497,8 +504,20 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
                           " profile for requested user")
+        # When
+        mocker.patch.object(api.session, 'commit')
+        api.session.commit.side_effect = InvalidRequestError()
+        result = api.patch_user_profile(
+            user1.user_id,
+            "newname",
+            "newpassword",
+            request,
+            response,
+            authenticated_user)
+        # Then
+        assert result == 'User profile not updated'
 
-    @patch('nikoniko.nikonikoapi.SMTP')
+    @patch('nikoniko.nikonikoapi.SMTP_SSL')
     def test_password_reset_code(  # pylint: disable=unused-argument
             self,
             smtp_mock,
@@ -507,6 +526,7 @@ class TestAPI(object):  # pylint: disable=no-self-use
             mocker):
         # Given
         mocker.spy(api, 'email_password_reset_code')
+        mocker.spy(api.logger, 'error')
         # When
         api.password_reset_code("another@example.com")
         # Then
@@ -519,3 +539,12 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert (
             api.email_password_reset_code  # pylint: disable=no-member
             .call_count == 1)
+        # When
+        smtp_mock.side_effect = SMTPException()
+        api.password_reset_code(user1.email)
+        # Then
+        assert (
+            api.email_password_reset_code  # pylint: disable=no-member
+            .call_count == 2)
+        assert (
+            api.logger.error.call_count == 1)

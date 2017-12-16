@@ -5,7 +5,7 @@ import datetime
 import logging
 import uuid
 
-from smtplib import SMTP
+from smtplib import SMTP_SSL, SMTPException
 
 import hug
 import jwt
@@ -107,6 +107,7 @@ class NikonikoAPI:
             self.email_password_reset_code(user.email, uuid.uuid4())
         except NoResultFound as exception:
             self.logger.warning(exception)
+        return 'Email sent'
 
     def email_password_reset_code(self, email, code):
         ''' Emails a uuid code to an email '''
@@ -114,11 +115,19 @@ class NikonikoAPI:
 
     def sendmail(self, receiver, message):
         ''' send an email to a receiver '''
-        server = SMTP(self.mailconfig['server'], self.mailconfig['port'])
-        server.starttls()
-        server.login(self.mailconfig['user'], self.mailconfig['password'])
-        server.sendmail(self.mailconfig['sender'], receiver, message)
-        server.quit()
+        self.logger.debug('MAILER: [%s]', self.mailconfig)
+        try:
+            server = SMTP_SSL(
+                self.mailconfig['server'],
+                self.mailconfig['port'])
+            server.login(self.mailconfig['user'], self.mailconfig['password'])
+            mail_text = 'FROM: {}\n\n{}'.format(
+                self.mailconfig['sender'],
+                message.__str__())
+            server.sendmail(self.mailconfig['sender'], receiver, mail_text)
+            server.quit()
+        except SMTPException as error:
+            self.logger.error(error)
 
     def update_password(  # pylint: disable=too-many-arguments
             self,
