@@ -97,6 +97,7 @@ def bootstrap_db(session):
         session.rollback()
 
 
+logging.basicConfig()
 LOG_LEVEL = getattr(logging, os.getenv('LOGLEVEL', 'INFO').upper())
 if not isinstance(LOG_LEVEL, int):
     raise ValueError('Invalid log level: {}'.format(LOG_LEVEL))
