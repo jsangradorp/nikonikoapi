@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+CONF=/etc/sysconfig/nikonikoapi
+INI=/etc/uwsgi.ini
+
+[ -r "${CONF}" ] && source ${CONF}
+
+exec uwsgi --ini ${INI}
