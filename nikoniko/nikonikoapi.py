@@ -1,10 +1,10 @@
 """
 Provide an API to manage happiness logs (nikoniko) for teams
 """
-import datetime
 import logging
 import uuid
 
+from datetime import datetime, timedelta
 from smtplib import SMTP_SSL, SMTPException
 
 import hug
@@ -12,7 +12,8 @@ import jwt
 import bcrypt
 
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.exc import InvalidRequestError, StatementError
+from falcon import HTTP_409
 from falcon import HTTP_404
 from falcon import HTTP_401
 from falcon import HTTP_403
@@ -75,7 +76,7 @@ class NikonikoAPI:
         try:
             user = self.session.query(User).filter_by(email=email).one()
             if check_password(user, password):
-                created = datetime.datetime.now()
+                created = datetime.now()
                 return {
                     'user': user.user_id,
                     'person': user.person_id,
@@ -85,7 +86,7 @@ class NikonikoAPI:
                             'created': created.isoformat(),
                             'exp':
                                 (created +
-                                 datetime.timedelta(days=1)).timestamp()
+                                 timedelta(days=1)).timestamp()
                         },
                         self.secret_key,
                         algorithm='HS256'
@@ -101,17 +102,18 @@ class NikonikoAPI:
             code = uuid.uuid4()
             code_object = PasswordResetCode(
                 user_id=user.user_id,
-                code=code)
+                code=code,
+                expiry=datetime.now() + timedelta(days=2))
             self.session.add(code_object)
             self.session.commit()
-            self.email_password_reset_code(user.email, uuid.uuid4())
+            self.email_password_reset_code(user.email, code)
         except NoResultFound as exception:
             self.logger.warning(exception)
         return 'Email sent'
 
     def email_password_reset_code(self, email, code):
         ''' Emails a uuid code to an email '''
-        self.sendmail(email, code)
+        self.sendmail(email, code.__str__())
 
     def sendmail(self, receiver, message):
         ''' send an email to a receiver '''
@@ -123,7 +125,7 @@ class NikonikoAPI:
             server.login(self.mailconfig['user'], self.mailconfig['password'])
             mail_text = 'FROM: {}\n\n{}'.format(
                 self.mailconfig['sender'],
-                message.__str__())
+                message)
             server.sendmail(self.mailconfig['sender'], receiver, mail_text)
             server.quit()
         except SMTPException as error:
@@ -156,10 +158,42 @@ class NikonikoAPI:
         self.session.add(found_user)
         invalidated_token = InvalidatedToken(
             token=request.headers['AUTHORIZATION'],
-            timestamp_invalidated=datetime.datetime.now())
+            timestamp_invalidated=datetime.now())
         self.session.add(invalidated_token)
         self.session.commit()
         response.status = HTTP_204
+
+    def update_password_with_code(
+            self,
+            password_reset_code: hug.types.text,
+            password: hug.types.text,
+            response):
+        '''Updates a users' password with a emailed code'''
+        try:
+            found_code = (self.session
+                          .query(PasswordResetCode)
+                          .filter(
+                              PasswordResetCode.code == password_reset_code)
+                          .filter(PasswordResetCode.expiry >= datetime.now())
+                          .one())
+        except (NoResultFound, ValueError, StatementError) as exception:
+            self.logger.debug('Invalid password reset code: %s', exception)
+            response.status = HTTP_409
+            return 'Invalid password reset code'
+        try:
+            found_user = (self.session
+                          .query(User)
+                          .filter(User.user_id == found_code.user_id)
+                          .one())
+        except (NoResultFound, ValueError, StatementError) as error:
+            self.logger.debug('User not found for password reset code: %s',
+                              error)
+            response.status = HTTP_404
+            return 'Invalid password reset code'
+        found_user.password_hash = hash_password(password)
+        self.session.add(found_user)
+        self.session.commit()
+        return 'Password updated'
 
     def get_user(self, user_id: hug.types.number, response,
                  authenticated_user: hug.directives.user):
@@ -240,7 +274,7 @@ class NikonikoAPI:
         '''Invalidates an authentication token in the DB'''
         invalidated_token = InvalidatedToken(
             token=token,
-            timestamp_invalidated=datetime.datetime.now())
+            timestamp_invalidated=datetime.now())
         self.session.add(invalidated_token)
 
     def get_person(self, person_id: hug.types.number, response):
@@ -313,7 +347,7 @@ class NikonikoAPI:
             reported_feeling = ReportedFeeling(
                 person_id=person_id,
                 board_id=board_id,
-                date=datetime.datetime.strptime(
+                date=datetime.strptime(
                     date,
                     "%Y-%m-%d").date(),
                 feeling=feeling)
@@ -345,6 +379,9 @@ class NikonikoAPI:
         '''Assign methods to endpoints'''
         hug.post('/login', api=self.api)(self.login)
         hug.post('/passwordResetCode', api=self.api)(self.password_reset_code)
+        hug.post(
+            '/password/{password_reset_code}',
+            api=self.api)(self.update_password_with_code)
         token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter
                 self.token_verify)

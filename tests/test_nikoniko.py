@@ -13,6 +13,7 @@ import jwt
 
 from falcon import HTTP_401
 from falcon import HTTP_404
+from falcon import HTTP_409
 from falcon import Request
 from falcon.testing import StartResponseMock, create_environ
 from sqlalchemy.exc import InvalidRequestError, OperationalError
@@ -456,6 +457,42 @@ class TestAPI(object):  # pylint: disable=no-self-use
         assert response.status == HTTP_401
         assert result == ("Authenticated user isn't allowed to update the"
                           " password for requested user")
+
+    def test_update_password_with_code(self, api, user1, mocker):
+        code = ''
+
+        def sendmail_trap(*args):
+            nonlocal code
+            code = args[1]  # pylint: disable=unused-variable
+            return
+        # Given
+        response = StartResponseMock()
+        mocker.patch.object(api, 'sendmail', sendmail_trap)
+        api.password_reset_code(user1.email)
+        # When
+        result = api.update_password_with_code(
+            code,
+            "newpassword",
+            response)
+        # Then
+        user = TESTSESSION.query(User).filter_by(user_id=user1.user_id).one()
+        assert check_password(user, "newpassword") is True
+        # When
+        result = api.update_password_with_code(
+            '12345678-1234-5678-1234-567812345678',
+            "newpassword",
+            response)
+        # Then
+        assert response.status == HTTP_409
+        assert result == 'Invalid password reset code'
+        # When
+        result = api.update_password_with_code(
+            'Invalid UUID string',
+            "newpassword",
+            response)
+        # Then
+        assert response.status == HTTP_409
+        assert result == 'Invalid password reset code'
 
     def test_patch_user_profile(  # pylint: disable=too-many-arguments
             self,
