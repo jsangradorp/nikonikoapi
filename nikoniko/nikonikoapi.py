@@ -180,16 +180,10 @@ class NikonikoAPI:
             self.logger.debug('Invalid password reset code: %s', exception)
             response.status = HTTP_409
             return 'Invalid password reset code'
-        try:
-            found_user = (self.session
-                          .query(User)
-                          .filter(User.user_id == found_code.user_id)
-                          .one())
-        except (NoResultFound, ValueError, StatementError) as error:
-            self.logger.debug('User not found for password reset code: %s',
-                              error)
-            response.status = HTTP_404
-            return 'Invalid password reset code'
+        found_user = (self.session
+                      .query(User)
+                      .filter(User.user_id == found_code.user_id)
+                      .one())
         found_user.password_hash = hash_password(password)
         self.session.add(found_user)
         self.session.commit()
