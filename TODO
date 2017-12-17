@@ -1,3 +1,4 @@
+- Finish deployment scripts
 - Separate asserts in separate test functions
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
