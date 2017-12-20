@@ -1,3 +1,4 @@
+- Fix logging in production environments
 - Finish deployment scripts
 - Crate beautiful REAME, LICENSE, CONTRIBUTING, etc.
 - Separate asserts in separate test functions
