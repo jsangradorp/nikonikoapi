@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-DEST=$1
-[ -z "$DEST" ] && DEST=192.168.69.185
-
 set -x
+
+DEST="$@"
+[ -z "$DEST" ] && DEST="-t nikonikoapi"
 
 cd $(dirname $0)/..
 rm -f dist/*
