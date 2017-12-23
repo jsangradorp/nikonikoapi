@@ -374,7 +374,7 @@ class NikonikoAPI:
         hug.post('/login', api=self.api)(self.login)
         hug.post('/passwordResetCode', api=self.api)(self.password_reset_code)
         hug.post(
-            '/password/{password_reset_code}',
+            '/passwordReset/{password_reset_code}',
             api=self.api)(self.update_password_with_code)
         token_key_authentication = \
             hug.authentication.token(  # pylint: disable=no-value-for-parameter
