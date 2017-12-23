@@ -20,12 +20,12 @@ services:
     nginx:
         image: nginx:latest
         volumes:
-            - ./conf/nginx/nikonikoapi.conf:/etc/nginx/conf.d/nikonikoapi.conf
-            - ./conf/nginx/localhost.key:/etc/nginx/localhost.key
-            - ./conf/nginx/localhost.crt:/etc/nginx/localhost.crt
-            - ./conf/nginx/uwsgi_params:/etc/nginx/uwsgi_params
+            - ./conf/etc/nginx/nikonikoapi.conf:/etc/nginx/conf.d/nikonikoapi.conf
+            - ./conf/etc/nginx/localhost.key:/etc/nginx/localhost.key
+            - ./conf/etc/nginx/localhost.crt:/etc/nginx/localhost.crt
+            - ./conf/etc/nginx/uwsgi_params:/etc/nginx/uwsgi_params
               # to generate, `openssl dhparam -out dhparams.pem 2048`
-            - ./conf/nginx/dhparams.pem:/etc/nginx/dhparams.pem
+            - ./conf/etc/nginx/dhparams.pem:/etc/nginx/dhparams.pem
         expose:
             - "443"
         ports:

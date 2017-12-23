@@ -11,4 +11,4 @@ ARG dbhost
 ARG dbuser
 
 ENV DB_HOST=$dbhost DB_USERNAME=$dbuser
-CMD [ "uwsgi", "./conf/uwsgi.ini" ]
+CMD [ "uwsgi", "./conf/etc/uwsgi.ini"]
