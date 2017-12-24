@@ -17,4 +17,4 @@ INI=/etc/uwsgi.ini
 
 [ -r "${CONF}" ] && . ${CONF}
 
-exec uwsgi --ini ${INI} --daemonize /var/log/uwsgi.log --logfile-chown
+exec uwsgi --ini ${INI} --daemonize /var/log/uwsgi.log --logfile-chown --force-cwd /
