@@ -1,10 +1,5 @@
-- Finish deployment scripts
-- Create real certs on install if convenient
-- Deploy sendmail if relevant
+- Add catchall route and respond 404 (or)
 - Crate beautiful REAME, LICENSE, CONTRIBUTING, etc.
-- Separate asserts in separate test functions
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
-- Add catchall route and respond 404 (or)
-- Consider using JSON for /login parameters instead of urlecoded
