@@ -12,3 +12,4 @@ __pycache__
 /dist/
 /.eggs/
 dhparams.pem
+/conf/etc/default/nikonikoapi
