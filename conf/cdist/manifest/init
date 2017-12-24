@@ -1,9 +1,10 @@
 #!/bin/sh -e
+
 __tags=$__target_host_tags
 __candidates=$( (cd $__manifest && ls -m *.sh) | sed -e 's/, / /g' -e 's/[.]sh[[:>:]]//g')
 
 for __tag in $__candidates; do
-    if [ $(echo "$__tags" | sed "s/[[:<:]]$__tag[[:>:]]//") != "$__tags" ]; then
+    if [ "$(echo "$__tags" | sed "s/[[:<:]]$__tag[[:>:]]//")" != "$__tags" ]; then
         . $__manifest/$__tag.sh
     fi
 done

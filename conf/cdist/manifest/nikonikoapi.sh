@@ -2,21 +2,16 @@
 __cdistmarker
 
 export CDIST_ORDER_DEPENDENCY=on
-
-# __package_update_index
-# __package_upgrade_all --apt-dist-upgrade --apt-clean
-
+__package_update_index
+__package_upgrade_all --apt-dist-upgrade --apt-clean
 __package build-essential
 __package python3-dev
 __package python3-pip
 __package python3-setuptools
-
 __package_pip uwsgi --pip /usr/bin/pip3
-
 FILENAME=$(cd dist && ls -x nikoniko*.whl)
 __file ${FILENAME} --source dist/${FILENAME}
 __package_pip ${FILENAME} --pip /usr/bin/pip3 --name /${FILENAME}
-
 unset CDIST_ORDER_DEPENDENCY
 
 __hosts nikonikoapi --ip 127.0.0.1

@@ -1,9 +1,6 @@
 #!/bin/sh -e
 __cdistmarker
 
-# __package_update_index
-# __package_upgrade_all --apt-dist-upgrade --apt-clean
-
 __package nginx
 
 require="__package/nginx" __file /etc/nginx/sites-available/nikonikoapi.conf --source conf/etc/nginx/nikonikoapi.conf
