@@ -1,4 +1,6 @@
 - Finish deployment scripts
+- Create real certs on install if convenient
+- Deploy sendmail if relevant
 - Crate beautiful REAME, LICENSE, CONTRIBUTING, etc.
 - Separate asserts in separate test functions
 - Make it multi tenant
