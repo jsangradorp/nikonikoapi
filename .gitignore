@@ -13,3 +13,5 @@ __pycache__
 /.eggs/
 dhparams.pem
 /conf/etc/default/nikonikoapi
+/conf/etc/nginx/localhost.crt
+/conf/etc/nginx/localhost.key
