@@ -1,5 +1,4 @@
-''' "Main" entry point to run the Nikoniko API '''
-from __future__ import print_function
+""" "Main" entry point to run the Nikoniko API """
 
 import logging
 import os
@@ -19,7 +18,7 @@ from sqlalchemy.exc import InvalidRequestError
 
 
 def db_connstring_from_environment(logger=logging.getLogger(__name__)):
-    ''' compose the connection string based on environment vars values '''
+    """ compose the connection string based on environment vars values """
     db_driver = os.getenv('DB_DRIVER', 'postgresql')
     db_host = os.getenv('DB_HOST', 'localhost')
     db_port = os.getenv('DB_PORT', '5432')
@@ -44,7 +43,7 @@ def db_connstring_from_environment(logger=logging.getLogger(__name__)):
 
 
 def mailer_config_from_environment(logger=logging.getLogger(__name__)):
-    ''' Calculate and return mailer configuration based on environment '''
+    """ Calculate and return mailer configuration based on environment """
     mailer_config = dict(
         server=os.getenv('MAILER_HOST', 'localhost'),
         port=os.getenv('MAILER_PORT', 25),
@@ -56,7 +55,7 @@ def mailer_config_from_environment(logger=logging.getLogger(__name__)):
 
 
 def bootstrap_db(session):
-    ''' Fill in the DB with initial data '''
+    """ Fill in the DB with initial data """
     one_person = Person(person_id=1, label='Ann')
     other_person = Person(person_id=2, label='John')
     session.add(one_person)

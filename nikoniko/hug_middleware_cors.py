@@ -1,4 +1,4 @@
-''' Add a middleware to allow cross-origin request sharing '''
+""" Add a middleware to allow cross-origin request sharing """
 import re
 
 
@@ -16,7 +16,7 @@ class CORSMiddleware(object):
             allow_origins: list = None,
             allow_credentials: bool = True,
             max_age: int = None):
-        ''' Initialize the middleware '''
+        """ Initialize the middleware """
         if allow_origins is None:
             allow_origins = ['*']
         self.api = api

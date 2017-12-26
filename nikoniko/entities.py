@@ -1,4 +1,4 @@
-''' Definition of ORM objects for the Nikoniko boards API '''
+""" Definition of ORM objects for the Nikoniko boards API """
 import time
 
 from sqlalchemy import Column, Integer, String, Date, DateTime
@@ -15,7 +15,7 @@ from marshmallow import Schema, fields
 
 
 class DB(object):  # pylint: disable=too-few-public-methods
-    ''' DB / SQLAlchemy '''
+    """ DB / SQLAlchemy """
     base = declarative_base()
 
     def __init__(self, db_connstring, echo=False):
@@ -27,7 +27,7 @@ class DB(object):  # pylint: disable=too-few-public-methods
         self.connect()
 
     def connect(self):
-        ''' Retry initial connection to the DB a number of times '''
+        """ Retry initial connection to the DB a number of times """
         connected = False
         tries = 100
         while not connected:
@@ -41,12 +41,12 @@ class DB(object):  # pylint: disable=too-few-public-methods
                     raise
 
     def create_all(self):
-        ''' create tables in DB '''
+        """ create tables in DB """
         self.base.metadata.create_all(self.engine)
 
 
 class InvalidatedToken(DB.base):  # pylint: disable=too-few-public-methods
-    ''' Invalidated Token entity definition '''
+    """ Invalidated Token entity definition """
     __tablename__ = 'invalidatedtokens'
     token = Column(String(180), primary_key=True)
     timestamp_invalidated = Column(
@@ -56,7 +56,7 @@ class InvalidatedToken(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class PasswordResetCode(DB.base):  # pylint: disable=too-few-public-methods
-    ''' Password reset code entity definition '''
+    """ Password reset code entity definition """
     __tablename__ = 'passwordresetcodes'
     user_id = Column(Integer, ForeignKey('users.user_id'))
     expiry = Column(DateTime)
@@ -64,7 +64,7 @@ class PasswordResetCode(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class User(DB.base):  # pylint: disable=too-few-public-methods
-    ''' User entity definition '''
+    """ User entity definition """
     __tablename__ = 'users'
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
@@ -75,7 +75,7 @@ class User(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class ReportedFeeling(DB.base):  # pylint: disable=too-few-public-methods
-    ''' Reported Feeling entity definition '''
+    """ Reported Feeling entity definition """
     __tablename__ = 'reportedfeelings'
     person_id = Column(
         Integer,
@@ -90,11 +90,12 @@ class ReportedFeeling(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class ReportedFeelingSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' Reported Feeling schema definition '''
+    """ Reported Feeling schema definition """
     person_id = fields.Int(dump_only=True)
     board_id = fields.Int(dump_only=True)
     date = fields.Date()
     feeling = fields.Str()
+
 
 REPORTEDFEELING_SCHEMA = ReportedFeelingSchema()
 REPORTEDFEELINGS_SCHEMA = ReportedFeelingSchema(many=True)
@@ -113,7 +114,7 @@ MEMBERSHIP = \
 
 
 class Person(DB.base):  # pylint: disable=too-few-public-methods
-    ''' Person entity definition '''
+    """ Person entity definition """
     __tablename__ = 'people'
     person_id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
@@ -128,23 +129,24 @@ class Person(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class PersonSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' Person schema definition '''
+    """ Person schema definition """
     person_id = fields.Int(dump_only=True)
     label = fields.Str()
+
 
 PERSON_SCHEMA = PersonSchema()
 PEOPLE_SCHEMA = PersonSchema(many=True)
 
 
 class PersonInBoardSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' Person in board schema definition '''
+    """ Person in board schema definition """
     person_id = fields.Int(dump_only=True)
     label = fields.Str()
     reportedfeelings = fields.Nested(ReportedFeelingSchema, many=True)
 
 
 class Board(DB.base):  # pylint: disable=too-few-public-methods
-    ''' Board entity definition '''
+    """ Board entity definition """
     __tablename__ = 'boards'
     board_id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String(50))
@@ -158,38 +160,41 @@ class Board(DB.base):  # pylint: disable=too-few-public-methods
 
 
 class BoardSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' Board schema definition '''
+    """ Board schema definition """
     board_id = fields.Int(dump_only=True)
     label = fields.Str()
     people = fields.Nested(PersonInBoardSchema, many=True)
+
 
 BOARD_SCHEMA = BoardSchema()
 BOARDS_SCHEMA = BoardSchema(many=True)
 
 
 class BoardInListSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' Board in list schema definition '''
+    """ Board in list schema definition """
     board_id = fields.Int(dump_only=True)
     label = fields.Str()
 
 
 class UserSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' User schema definition '''
+    """ User schema definition """
     user_id = fields.Int(dump_only=True)
     name = fields.Str()
     email = fields.Str()
     person = fields.Nested(PersonSchema)
     boards = fields.Nested(BoardInListSchema, many=True)
 
+
 USER_SCHEMA = UserSchema()
 USERS_SCHEMA = UserSchema(many=True)
 
 
 class UserProfileSchema(Schema):  # pylint: disable=too-few-public-methods
-    ''' User profile schema definition '''
+    """ User profile schema definition """
     user_id = fields.Int(dump_only=True)
     name = fields.Str()
     email = fields.Str()
+
 
 USERPROFILE_SCHEMA = UserProfileSchema()
 USERPROFILES_SCHEMA = UserProfileSchema(many=True)

@@ -34,14 +34,14 @@ NULL_LOGGER.addHandler(logging.NullHandler())
 
 
 def return_unauthorised(response, email, exception=None):
-    '''Update the response to mean unauthorised access'''
+    """Update the response to mean unauthorised access"""
     response.status = HTTP_401
     return 'Invalid email and/or password for email: {} [{}]'.format(
         email, exception)
 
 
 def hash_password(password):
-    '''Hashes a password'''
+    """Hashes a password"""
     password_hash = bcrypt.hashpw(
         password.encode(),
         bcrypt.gensalt()).decode()
@@ -49,14 +49,14 @@ def hash_password(password):
 
 
 def check_password(user, password):
-    '''Checks that a given password corresponds to a given user'''
+    """Checks that a given password corresponds to a given user"""
     return bcrypt.checkpw(password.encode(), user.password_hash.encode())
 
 
 class NikonikoAPI:
-    '''Wrapper around hug API for initialization, testing, etc.'''
+    """Wrapper around hug API for initialization, testing, etc."""
     def token_verify(self, token):
-        '''hug authentication token verification function'''
+        """hug authentication token verification function"""
         self.logger.debug('Token: %s', token)
         try:
             decoded_token = jwt.decode(
@@ -72,7 +72,7 @@ class NikonikoAPI:
             return decoded_token
 
     def login(self, email: hug.types.text, password: hug.types.text, response):
-        '''Authenticates and returns a token'''
+        """Authenticates and returns a token"""
         try:
             user = self.session.query(User).filter_by(email=email).one()
             if check_password(user, password):
@@ -96,7 +96,7 @@ class NikonikoAPI:
             return return_unauthorised(response, email, exception)
 
     def password_reset_code(self, email: hug.types.text):
-        ''' create a password reset code and send it to the user if exists '''
+        """ create a password reset code and send it to the user if exists """
         try:
             user = self.session.query(User).filter_by(email=email).one()
             code = uuid.uuid4()
@@ -112,11 +112,11 @@ class NikonikoAPI:
         return 'Email sent'
 
     def email_password_reset_code(self, email, code):
-        ''' Emails a uuid code to an email '''
+        """ Emails a uuid code to an email """
         self.sendmail(email, code.__str__())
 
     def sendmail(self, receiver, message):
-        ''' send an email to a receiver '''
+        """ send an email to a receiver """
         self.logger.debug('MAILER: [%s]', self.mailconfig)
         try:
             server = SMTP_SSL(
@@ -138,7 +138,7 @@ class NikonikoAPI:
             request,
             response,
             authenticated_user: hug.directives.user):
-        '''Updates a users' password'''
+        """Updates a users' password"""
         try:
             found_user = self.session.query(
                 User).filter_by(user_id=user_id).one()
@@ -168,7 +168,7 @@ class NikonikoAPI:
             password_reset_code: hug.types.text,
             password: hug.types.text,
             response):
-        '''Updates a users' password with a emailed code'''
+        """Updates a users' password with a emailed code"""
         try:
             found_code = (self.session
                           .query(PasswordResetCode)
@@ -191,7 +191,7 @@ class NikonikoAPI:
 
     def get_user(self, user_id: hug.types.number, response,
                  authenticated_user: hug.directives.user):
-        '''Returns a user'''
+        """Returns a user"""
         self.logger.debug(
             'Authenticated user reported: %s', authenticated_user)
         try:
@@ -212,7 +212,7 @@ class NikonikoAPI:
             user_id: hug.types.number,
             response,
             authenticated_user: hug.directives.user):
-        '''Returns a user profile'''
+        """Returns a user profile"""
         self.logger.debug(
             'Authenticated user reported: %s', authenticated_user)
         try:
@@ -231,7 +231,7 @@ class NikonikoAPI:
             request,
             response,
             authenticated_user: hug.directives.user):
-        '''Patches a user's data'''
+        """Patches a user's data"""
         self.logger.debug(
             'User profile patch: <<"%s", "%s">>',
             name,
@@ -265,14 +265,14 @@ class NikonikoAPI:
             return "User profile not updated"
 
     def invalidate_token(self, token):
-        '''Invalidates an authentication token in the DB'''
+        """Invalidates an authentication token in the DB"""
         invalidated_token = InvalidatedToken(
             token=token,
             timestamp_invalidated=datetime.now())
         self.session.add(invalidated_token)
 
     def get_person(self, person_id: hug.types.number, response):
-        '''Returns a person'''
+        """Returns a person"""
         try:
             res = self.session.query(
                 Person).filter_by(person_id=person_id).one()
@@ -282,12 +282,12 @@ class NikonikoAPI:
         return PERSON_SCHEMA.dump(res).data
 
     def people(self):
-        '''Returns all the people'''
+        """Returns all the people"""
         res = self.session.query(Person).all()
         return PEOPLE_SCHEMA.dump(res).data
 
     def board(self, board_id: hug.types.number, response):
-        '''Returns a board'''
+        """Returns a board"""
         try:
             res = self.session.query(Board).filter_by(board_id=board_id).one()
             for person in res.people:
@@ -303,7 +303,7 @@ class NikonikoAPI:
         return BOARD_SCHEMA.dump(res).data
 
     def get_boards(self):
-        '''Returns all boards'''
+        """Returns all boards"""
         res = self.session.query(Board).all()
         return BOARDS_SCHEMA.dump(res).data
 
@@ -313,7 +313,7 @@ class NikonikoAPI:
             person_id: hug.types.number,
             date: hug.types.text,
             response):
-        '''Returns a specific reported feeling for a board, person and date'''
+        """Returns a specific reported feeling for a board, person and date"""
         try:
             res = self.session.query(ReportedFeeling).filter_by(
                 board_id=board_id,
@@ -330,7 +330,7 @@ class NikonikoAPI:
             person_id: hug.types.number,
             feeling: hug.types.text,
             date: hug.types.text):
-        '''Creates a new reported_feeling'''
+        """Creates a new reported_feeling"""
         try:
             reported_feeling = self.session.query(ReportedFeeling).filter_by(
                 board_id=board_id,
@@ -361,16 +361,16 @@ class NikonikoAPI:
         self.logger = config['logger']
 
     def setup(self):
-        '''Set up endpoints and CORS middleware'''
+        """Set up endpoints and CORS middleware"""
         self.setup_cors()
         self.setup_endpoints()
 
     def setup_cors(self):
-        '''Add CORS middleware'''
+        """Add CORS middleware"""
         self.api.http.add_middleware(CORSMiddleware(self.api))
 
     def setup_endpoints(self):
-        '''Assign methods to endpoints'''
+        """Assign methods to endpoints"""
         hug.post('/login', api=self.api)(self.login)
         hug.post('/passwordResetCode', api=self.api)(self.password_reset_code)
         hug.post(
