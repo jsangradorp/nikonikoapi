@@ -71,7 +71,7 @@ See also for example [this entry in Stack Overflow](https://stackoverflow.com/qu
 
   `openssl dhparam -out dhparams.pem 2048`
 
-### Bootstrapping a test DB
+## Bootstrapping a test DB
 
 If the `DO_BOOSTRAP_DB` environment variable is set to `y`, example values
 will be inserted in the DB on startup.
@@ -82,3 +82,7 @@ will be inserted in the DB on startup.
 - To deploy to a debian stretch, use the `scripts/deploy.sh` script. It will
   not run correctly if you don't add `cdist` `tags` to the hosts you want to
   deploy to.
+
+## License
+
+NikonikoAPI is released under the GPL3 license. See the [LICENCE](./LICENSE) file for more details.
