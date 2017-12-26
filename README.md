@@ -85,4 +85,4 @@ will be inserted in the DB on startup.
 
 ## License
 
-NikonikoAPI is released under the GPL3 license. See the [LICENCE](./LICENSE) file for more details.
+NikonikoAPI is released under the GPL3 license. See the [LICENSE](./LICENSE) file for more details.
