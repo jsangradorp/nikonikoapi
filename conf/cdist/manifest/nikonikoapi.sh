@@ -16,8 +16,8 @@ unset CDIST_ORDER_DEPENDENCY
 
 __hosts nikonikoapi --ip 127.0.0.1
 
-__group uwsgi --gid 1001 --system
-require="__group/uwsgi" __user uwsgi --system --uid 1001 --gid 1001
+__group uwsgi --gid 1111 --system
+require="__group/uwsgi" __user uwsgi --system --uid 1111 --gid 1111
 
 __config_file /etc/init.d/nikonikoapi --source conf/etc/init.d/nikonikoapi --mode 0700
 __config_file /etc/uwsgi.ini --source conf/etc/uwsgi.ini
