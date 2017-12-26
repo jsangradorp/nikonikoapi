@@ -1,5 +1,6 @@
 - Make a list of files that shouldn't be commited
 - Make a pre-commit or pre-push script to disallow it
+- Make a note in README or wherever to sample how to create those
 - Create beautiful REAME, LICENSE, CONTRIBUTING, etc.
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
