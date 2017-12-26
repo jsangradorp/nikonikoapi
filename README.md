@@ -21,7 +21,7 @@ state. Others will explain it better than me:
 - [Team engagement with the Niko-Niko
   calendar](https://www.happymelly.com/team-engagement-niko-niko-calendar/)
 - [How to Track the Team’s Mood with a Niko-Niko
-  Calendar](agiletrail.com/2011/09/12/how-to-track-the-teams-mood-with-a-niko-niko-calendar/)
+  Calendar](http://agiletrail.com/2011/09/12/how-to-track-the-teams-mood-with-a-niko-niko-calendar/)
 - [Niko-Niko calendar: Measuring the team's
   happiness](https://www.indracompany.com/en/blogneo/niko-niko-calendar-measuring-teams-happiness)
 
