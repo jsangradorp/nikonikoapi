@@ -10,6 +10,30 @@ See current spec in `docs/` directory: [OpenAPI format](docs/spec/openapi.yaml),
 
 Python 3 mandatory.
 
+## What is a Niko-Niko Calendar
+
+It is a tool to very roughly measure the evolution of a team's emotional
+state. Others will explain it better than me:
+
+- [Niko-Niko calendar](http://www.geocities.jp/nikonikocalendar/index_en.html)
+- [What is a Niko-Niko
+  calendar?](https://www.agilealliance.org/glossary/nikoniko/)
+- [Team engagement with the Niko-Niko
+  calendar](https://www.happymelly.com/team-engagement-niko-niko-calendar/)
+- [How to Track the Team’s Mood with a Niko-Niko
+  Calendar](agiletrail.com/2011/09/12/how-to-track-the-teams-mood-with-a-niko-niko-calendar/)
+- [Niko-Niko calendar: Measuring the team's
+  happiness](https://www.indracompany.com/en/blogneo/niko-niko-calendar-measuring-teams-happiness)
+
+## Motivation
+
+I used to run a colocated team, where we used a pen-and-paper Niko-Niko
+calendar to follow up on the team general satisfaction or dissatisfaction.
+Then I started to run a dis-located (as opposed to co-located) team and I was
+trying to find an online tool that could give me something similar. I didn't
+find it so I moved on to build my own. I really wanted it multi-platform so I
+decided to start with a simple API which now you are looking at.
+
 ## Running
 
 3 ways to run more or less out of the box:
