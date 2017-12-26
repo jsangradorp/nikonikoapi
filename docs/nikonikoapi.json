@@ -69,6 +69,23 @@
                 "usage": "Updates a users' password"
             }
         },
+        "/passwordReset/{password_reset_code}": {
+            "POST": {
+                "inputs": {
+                    "password": {
+                        "type": "Basic text / string value"
+                    },
+                    "password_reset_code": {
+                        "type": "Basic text / string value"
+                    }
+                },
+                "outputs": {
+                    "content_type": "application/json",
+                    "format": "JSON (Javascript Serialized Object Notation)"
+                },
+                "usage": "Updates a users' password with a emailed code"
+            }
+        },
         "/passwordResetCode": {
             "POST": {
                 "inputs": {
