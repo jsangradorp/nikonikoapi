@@ -56,7 +56,7 @@ host for this to work.
 ## Environment variables affecting runtime
 
 See a list of environment variables and default values in
-`conf/etc/default/nikonikoapi.sample`
+[`conf/etc/default/nikonikoapi.sample`](conf/etc/default/nikonikoapi.sample)
 
 ## Secret files and how to generate them
 
