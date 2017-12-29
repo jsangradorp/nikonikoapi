@@ -2,3 +2,4 @@
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
+- Investigate and fix why DB SSL breaks when multithreading
