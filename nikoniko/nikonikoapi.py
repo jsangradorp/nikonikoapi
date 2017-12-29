@@ -44,13 +44,13 @@ def hash_password(password):
     """Hashes a password"""
     password_hash = bcrypt.hashpw(
         password.encode(),
-        bcrypt.gensalt()).decode()
+        bcrypt.gensalt())
     return password_hash
 
 
 def check_password(user, password):
     """Checks that a given password corresponds to a given user"""
-    return bcrypt.checkpw(password.encode(), user.password_hash.encode())
+    return bcrypt.checkpw(password.encode(), user.password_hash)
 
 
 class NikonikoAPI:

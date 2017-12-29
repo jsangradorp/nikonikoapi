@@ -138,7 +138,7 @@ def user1():
         password_hash=bcrypt.hashpw(
             'onepassword'.encode(),
             bcrypt.gensalt()
-            ).decode()
+            )
         )
     TESTSESSION.add(user)
     TESTSESSION.commit()
@@ -155,7 +155,7 @@ def user2():
         password_hash=bcrypt.hashpw(
             'whocares'.encode(),
             bcrypt.gensalt()
-            ).decode()
+            )
         )
     TESTSESSION.add(user)
     TESTSESSION.commit()

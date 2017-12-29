@@ -1,7 +1,7 @@
 """ Definition of ORM objects for the Nikoniko boards API """
 import time
 
-from sqlalchemy import Column, Integer, String, Date, DateTime
+from sqlalchemy import Column, Integer, String, Date, DateTime, Binary
 from sqlalchemy import ForeignKey
 from sqlalchemy import Table
 from sqlalchemy import create_engine
@@ -69,7 +69,7 @@ class User(DB.base):  # pylint: disable=too-few-public-methods
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
     email = Column(String(50), nullable=False, index=True, unique=True)
-    password_hash = Column(String(60))
+    password_hash = Column(Binary(60))
     person_id = Column(Integer, ForeignKey('people.person_id'))
     person = relationship('Person', back_populates='user')
 
