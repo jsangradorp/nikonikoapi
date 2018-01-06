@@ -1,3 +1,4 @@
+- Make a better email template for password reset code
 - Create beautiful REAME, LICENSE, CONTRIBUTING, etc.
 - Make it multi tenant
 - Review and account for wrong input and other corner cases. Proper error management
