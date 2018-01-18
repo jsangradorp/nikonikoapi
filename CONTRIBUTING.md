@@ -27,4 +27,4 @@ To do both:
 I recommend you to add the git hook in your working copy so git will run tests
 before the actual commit and also ensure you don't decrease test coverage.
 
-`ln -s scripts/git-hooks/pre-commit .git/hooks/pre-commit`
+`ln -s ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit`
