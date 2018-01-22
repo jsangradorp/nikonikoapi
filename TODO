@@ -1,3 +1,6 @@
+- Review running directions in README.md, I tried them in a clean system and I
+  failed to run the API (not for the docker-compose, although some friction
+  there too)
 - Add missing endpoint in openspec.yaml
 - Make a better email template for password reset code
 - Create beautiful README, LICENSE, CONTRIBUTING, etc.
