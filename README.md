@@ -76,12 +76,8 @@ See also for example [this entry in Stack Overflow](https://stackoverflow.com/qu
 If the `DO_BOOSTRAP_DB` environment variable is set to `y`, example values
 will be inserted in the DB on startup.
 
-- To run locally, adapt and use `scripts/run.sh`. You will need a postgresql
-  installation.
-- Alternatively, just run `docker-compose up`.
-- To deploy to a debian stretch, use the `scripts/deploy.sh` script. It will
-  not run correctly if you don't add `cdist` `tags` to the hosts you want to
-  deploy to.
+A user with several boards will be inserted, with username/email
+`john@example.com` and password `whocares`.
 
 ## License
 
