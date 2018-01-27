@@ -1,3 +1,4 @@
+- Fix DB bootstrapping (looks like serials are getting in the way)
 - Review running directions in README.md, I tried them in a clean system and I
   failed to run the API (not for the docker-compose, although some friction
   there too)
