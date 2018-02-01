@@ -72,7 +72,7 @@ def bootstrap_db(session):
         person_id=2,
         password_hash=bcrypt.hashpw(
             'whocares'.encode(),
-            bcrypt.gensalt()).decode())
+            bcrypt.gensalt()))
     session.add(one_user)
     try:
         session.commit()
