@@ -20,6 +20,7 @@ services:
     nginx:
         image: nginx:latest
         volumes:
+            - ./conf/etc/nginx/nikonikoapi-dev.conf:/etc/nginx/conf.d/nikonikoapi-dev.conf
             - ./conf/etc/nginx/nikonikoapi.conf:/etc/nginx/conf.d/nikonikoapi.conf
             - ./conf/etc/nginx/localhost.key:/etc/nginx/localhost.key
             - ./conf/etc/nginx/localhost.crt:/etc/nginx/localhost.crt
@@ -28,7 +29,9 @@ services:
             - ./conf/etc/nginx/dhparams.pem:/etc/nginx/dhparams.pem
         expose:
             - "443"
+            - "80"
         ports:
             - "8443:443"
+            - "8080:80"
         links:
             - nikonikoapi
