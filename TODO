@@ -1,3 +1,4 @@
+- Persist model values (check with device rotation)
 - Add an 'application-token' parameter to the login endpoint, and allow for
   application-requested tokens which expire differently.
 - Review running directions in README.md, I tried them in a clean system and I
