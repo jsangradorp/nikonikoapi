@@ -1,3 +1,5 @@
+- Add an 'application-token' parameter to the login endpoint, and allow for
+  application-requested tokens which expire differently.
 - Review running directions in README.md, I tried them in a clean system and I
   failed to run the API (not for the docker-compose, although some friction
   there too)
@@ -8,3 +10,6 @@
 - Review and account for wrong input and other corner cases. Proper error management
 - Review security
 - Investigate and fix why DB SSL breaks when multithreading
+  - First, replicate the bug
+  - Then, create test that shows it
+  - Finally, fix it
