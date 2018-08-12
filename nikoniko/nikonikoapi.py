@@ -162,6 +162,7 @@ class NikonikoAPI:
         self.session.add(invalidated_token)
         self.session.commit()
         response.status = HTTP_204
+        return None
 
     def update_password_with_code(
             self,

@@ -14,7 +14,7 @@ from sqlalchemy_utils import UUIDType
 from marshmallow import Schema, fields
 
 
-class DB(object):  # pylint: disable=too-few-public-methods
+class DB():  # pylint: disable=too-few-public-methods
     """ DB / SQLAlchemy """
     base = declarative_base()
 
