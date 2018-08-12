@@ -183,7 +183,7 @@ def authenticated_user(user1):
 @pytest.mark.usefixtures("empty_db", "api", "person1", "board1", "user1",
                          "user2", "authenticated_user", "monkeypatch",
                          "mocker")
-class TestAPI(object):  # pylint: disable=no-self-use
+class TestAPI():  # pylint: disable=no-self-use
     personLabel1 = "Julio"
     personLabel2 = "Marc"
     boardLabel1 = "Daganzo"
@@ -464,7 +464,6 @@ class TestAPI(object):  # pylint: disable=no-self-use
         def sendmail_trap(*args):
             nonlocal code
             code = args[1]  # pylint: disable=unused-variable
-            return
         # Given
         response = StartResponseMock()
         mocker.patch.object(api, 'sendmail', sendmail_trap)

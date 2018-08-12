@@ -3,7 +3,7 @@
 cd $(dirname $0)/..
 
 if [ -z "$VIRTUAL_ENV" ] ; then
-    [ ! -d .venv ] && virtualenv -p $(which python3) .venv
+    [ ! -d .venv ] && python3 -m venv .venv
     . .venv/bin/activate
 fi
 

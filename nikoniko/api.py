@@ -7,14 +7,14 @@ import re
 import bcrypt
 import hug
 
+from sqlalchemy.exc import InvalidRequestError
+
 from nikoniko.entities import DB
 from nikoniko.entities import User
 from nikoniko.entities import Person
 from nikoniko.entities import Board
 
 from nikoniko.nikonikoapi import NikonikoAPI
-
-from sqlalchemy.exc import InvalidRequestError
 
 
 def db_connstring_from_environment(logger=logging.getLogger(__name__)):
@@ -46,7 +46,7 @@ def mailer_config_from_environment(logger=logging.getLogger(__name__)):
     """ Calculate and return mailer configuration based on environment """
     mailer_config = dict(
         server=os.getenv('MAILER_HOST', 'localhost'),
-        port=os.getenv('MAILER_PORT', 25),
+        port=os.getenv('MAILER_PORT', '25'),
         user=os.getenv('MAILER_USER', 'coral@example.com'),
         password=os.getenv('MAILER_PASSWORD', 'mailerpassword'),
         sender=os.getenv('MAILER_SENDER', 'noreply@nikonikoboards.com'))

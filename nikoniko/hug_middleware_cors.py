@@ -2,7 +2,7 @@
 import re
 
 
-class CORSMiddleware(object):
+class CORSMiddleware():
     """A middleware for allowing cross-origin request sharing (CORS)
     Adds appropriate Access-Control-* headers to the HTTP responses
     returned from the hug API, especially for HTTP OPTIONS responses
