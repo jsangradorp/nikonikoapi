@@ -5,7 +5,7 @@ GENDOCS := ./docs/generate_api_documentation.py
 VENV := .venv
 PYTEST := env PYTHONPATH=$(PYTHONPATH) PYTEST=1 $(VENV)/bin/py.test --cov=$(PYTHON_MODULES) --cov-report=html -v
 PYLINT := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pylint --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
-PEP8 := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pep8 --repeat
+PYCODESTYLE := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/pycodestyle --repeat
 PYTHON := env PYTHONPATH=$(PYTHONPATH) $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 JWT_SECRET_KEY := fake-secret-key
@@ -35,7 +35,7 @@ serve-docs:
 	docker run -p 8081:8080 -e "SWAGGER_JSON=/spec/openapi.yaml" -v $(shell pwd)/docs/spec:/spec swaggerapi/swagger-ui
 
 check-coding-style: bootstrap
-	$(PEP8) $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
+	$(PYCODESTYLE) $(PYTHON_MODULES) $(TESTSPATH) $(GENDOCS)
 	$(PYLINT) $(PYTHON_MODULES) $(GENDOCS)
 	$(PYLINT) --disable=missing-docstring,no-self-use,redefined-outer-name $(TESTSPATH)
 pylint-full: check-coding-style
