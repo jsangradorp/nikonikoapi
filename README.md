@@ -44,7 +44,7 @@ decided to start with a simple API which now you are looking at.
 
 - Docker:
 
-`docker-compose up`
+`[DO_BOOSTRAP_DB="y"] JWT_SECRET_KEY="<YOUR_JWT_SECRET_KEY_OF_CHOICE>" docker-compose up`
 
 - External host (for example, virtual machine):
 `./scripts/deploy.sh [IP address of the host]`
