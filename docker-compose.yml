@@ -30,9 +30,9 @@ services:
             - ./conf/etc/nginx/dhparams.pem:/etc/nginx/dhparams.pem
         expose:
             - "443"
-            - "8080"
+          # - "8080"
         ports:
             - "0.0.0.0:8443:443"
-            - "0.0.0.0:8080:8080"
+          # - "0.0.0.0:8080:8080"
         links:
             - nikonikoapi
