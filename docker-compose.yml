@@ -15,6 +15,7 @@ services:
         environment:
             - DO_BOOTSTRAP_DB=${DO_BOOTSTRAP_DB:-0}
             - JWT_SECRET_KEY
+            - LOGLEVEL
         links:
             - postgres
     nginx:
