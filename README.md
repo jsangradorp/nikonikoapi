@@ -1,3 +1,5 @@
+This project has been moved to https://gitlab.com/jsangradorp/nikonikoapi
+
 # Nikoniko API
 
 An API to manage a collection of Niko-Niko calendars.
